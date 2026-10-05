@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "Gmailの本文とリンクを端末内で確認し、フィッシングの兆候を通知します。メール内容をサーバーへ送信しません。"
+  },
+  "active": {
+    "message": "チェックは有効です"
+  },
+  "paused": {
+    "message": "チェックは停止中です"
+  },
+  "enable": {
+    "message": "端末内チェックを有効にする"
+  },
+  "options": {
+    "message": "設定"
+  },
+  "language": {
+    "message": "表示言語"
+  },
+  "auto": {
+    "message": "ブラウザーの言語"
+  },
+  "showInfo": {
+    "message": "補足情報も表示する"
+  },
+  "save": {
+    "message": "設定を保存"
+  },
+  "saved": {
+    "message": "保存しました"
+  },
+  "privacy": {
+    "message": "プライバシー"
+  },
+  "coverage": {
+    "message": "確認対象は、この拡張機能が読み取れる本文とリンクです。メール認証・画像・QRコード・添付ファイル・リンク先ページは検証しません。警告がなくても安全を保証するものではありません。"
+  },
+  "scan": {
+    "message": "メールを端末内で確認"
+  },
+  "scanHelp": {
+    "message": "メールヘッダーやメール全文を貼り付けるか、.eml／.txtファイルを選ぶと、Gmailの自動チェックと同じルールで解析できます。内容は端末内だけで処理し、外部へ送信・保存しません（最大5 MB）。"
+  },
+  "choose": {
+    "message": ".eml／.txtを選択"
+  },
+  "analyze": {
+    "message": "メールを確認"
+  },
+  "clear": {
+    "message": "消去"
+  },
+  "sample": {
+    "message": "架空のサンプルで試す"
+  },
+  "error": {
+    "message": "確認を完了できませんでした。入力内容とサイズ制限を確認してください。"
+  },
+  "noGmail": {
+    "message": "Gmailを開いてメールを確認してください。"
+  },
+  "noMessages": {
+    "message": "Gmailでメールを開くか展開してください。結果が出ない場合はGmailを再読み込みしてください。"
+  },
+  "messages": {
+    "message": "開いているメール：{n}件"
+  },
+  "details": {
+    "message": "詳細を見る"
+  },
+  "close": {
+    "message": "閉じる"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "proceed": {
+    "message": "このリンクを開く"
+  },
+  "copy": {
+    "message": "URLをコピー"
+  },
+  "copied": {
+    "message": "コピーしました"
+  },
+  "confirm": {
+    "message": "開く前に確認してください"
+  },
+  "unsupported": {
+    "message": "この種類のリンクは、拡張機能から開けません。"
+  },
+  "target": {
+    "message": "クリック先"
+  },
+  "candidate": {
+    "message": "URL内の遷移候補（アクセスしていません）"
+  },
+  "reason": {
+    "message": "表示の理由"
+  },
+  "headers": {
+    "message": "ヘッダー情報"
+  },
+  "headerNote": {
+    "message": "メールの送信元が本物かどうかを保証する機能ではありません。"
+  },
+  "refresh": {
+    "message": "更新"
+  },
+  "reset": {
+    "message": "設定を初期化"
+  },
+  "resetConfirm": {
+    "message": "設定を初期化しますか？端末内チェックと補足情報の表示が有効になり、表示言語はブラウザーの言語に戻ります。"
+  },
+  "input": {
+    "message": "メールやヘッダーを貼り付けてください…"
+  },
+  "NO_FINDINGS": {
+    "message": "注意すべき兆候は見つかりませんでした"
+  },
+  "INFO": {
+    "message": "補足情報"
+  },
+  "CAUTION": {
+    "message": "確認をおすすめします"
+  },
+  "WARNING": {
+    "message": "操作前に確認"
+  },
+  "HIGH_RISK": {
+    "message": "高リスクの特徴があります"
+  },
+  "reasonUgc": {
+    "message": "このサービスでは、第三者がコンテンツを作成できます。"
+  },
+  "reasonRedirect": {
+    "message": "最終的な移動先は未確認です。URLに含まれる移動先も候補にすぎません。"
+  },
+  "reasonUnparsed": {
+    "message": "このリンクを完全には解析できませんでした。"
+  },
+  "reasonMismatch": {
+    "message": "表示されたURLと実際のリンクで、接続先のドメインが異なります。"
+  },
+  "reasonUserinfo": {
+    "message": "@より前の文字列は、実際のリンク先のホスト名ではありません。"
+  },
+  "reasonInvisible": {
+    "message": "リンクに不可視文字や文字方向を変える文字が含まれています。"
+  },
+  "reasonAccount": {
+    "message": "アカウントやセキュリティに関する操作で、第三者のコンテンツへ誘導しています。"
+  },
+  "reasonSecret": {
+    "message": "パスワードや認証コードを、不適切なリンク先で入力・送信するよう求めています。"
+  },
+  "reasonSpoof": {
+    "message": "アカウントに関する操作で、実際の接続先を偽装するリンクが使われています。"
+  },
+  "reasonLookalike": {
+    "message": "重要な操作を求めるリンクのホスト名が、既知のブランド名に似ています。"
+  },
+  "reasonUnknown": {
+    "message": "このリンク先と、求められているアカウント操作の関係は確認できません。"
+  },
+  "reasonAmbiguous": {
+    "message": "要求される操作とリンクの対応を、明確に確認できません。"
+  },
+  "reasonScheme": {
+    "message": "未対応のリンク形式です。拡張機能はこのリンクを開きません。"
+  },
+  "reasonForward": {
+    "message": "ヘッダーに転送の可能性を示す情報があります。転送だけで危険とは判断できません。"
+  },
+  "reasonReply": {
+    "message": "返信先と差出人のドメインが異なります。この違いだけで危険とは判断できません。"
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "一部のみ確認しました。サイズ・形式・解析上限などにより、未確認の内容が残っています。"
+  },
+  "unavailable": {
+    "message": "確認できるメール本文がありません。ヘッダー情報は参照できる場合があります。"
+  },
+  "settingsHelp": {
+    "message": "表示言語と、Gmailでの自動チェックや表示する情報を設定します。"
+  },
+  "languageHelp": {
+    "message": "拡張機能の表示言語を変更します。"
+  },
+  "enableHelp": {
+    "message": "Gmailで開いたメールを自動で確認します。オフにすると画面上の警告表示を一時停止します。"
+  },
+  "showInfoHelp": {
+    "message": "オフの場合、補足情報は小さなボタンから確認できます。警告や未確認部分の通知は引き続き表示します。"
+  },
+  "shownHost": {
+    "message": "表示されたURL"
+  },
+  "actualHost": {
+    "message": "実際のリンク先ホスト名"
+  },
+  "apparentTarget": {
+    "message": "@ の前の文字列"
+  },
+  "suspiciousChars": {
+    "message": "注意が必要な文字"
+  },
+  "requestedAction": {
+    "message": "求められている操作"
+  },
+  "destinationHost": {
+    "message": "接続先"
+  },
+  "destinationType": {
+    "message": "接続先の種類"
+  },
+  "candidateHost": {
+    "message": "考えられる移動先"
+  },
+  "thirdPartyContent": {
+    "message": "第三者コンテンツ"
+  },
+  "actionSecret": {
+    "message": "パスワードや認証コードの入力"
+  },
+  "actionAccount": {
+    "message": "アカウントやログインに関する操作"
+  },
+  "actionShared": {
+    "message": "共有コンテンツを開く"
+  },
+  "actionOpen": {
+    "message": "リンクを開く"
+  },
+  "unknown": {
+    "message": "確認できない部分があります"
+  },
+  "occurrences": {
+    "message": "{n} か所"
+  },
+  "context": {
+    "message": "周辺の文面"
+  },
+  "linkText": {
+    "message": "リンクの表示文"
+  },
+  "otherFindings": {
+    "message": "ほかに {n} 件の注意点"
+  },
+  "linkInput": {
+    "message": "解析できなかったリンク"
+  },
+  "privacyChecks": {
+    "message": "Gmailで開いたメールの表示中の本文とリンク、および貼り付けたメールや選択した.eml／.txtファイルの内容を、端末内で確認します。"
+  },
+  "privacyExclusions": {
+    "message": "画像・QRコード・添付ファイル・リンク先ページは検証しません。"
+  },
+  "privacyStorage": {
+    "message": "メール内容は外部へ送信せず、保存もしません。保存するのは設定だけです。"
+  },
+  "privacyDisclaimer": {
+    "message": "警告がなくても、メールの安全性や送信元が本物であることは保証されません。"
+  },
+  "linkCount": {
+    "message": "{n} 個のリンク"
+  },
+  "groupLinkCount": {
+    "message": "{groups} 組・{links} 個のリンク"
+  },
+  "locateLink": {
+    "message": "該当箇所に移動"
+  },
+  "linkChanged": {
+    "message": "リンクが変更されました。再確認中"
+  },
+  "warningMarker": {
+    "message": "要確認"
+  },
+  "locateWarning": {
+    "message": "該当箇所に移動"
+  },
+  "copyUnavailable": {
+    "message": "コピーできませんでした"
+  },
+  "markerTarget": {
+    "message": "リンク先"
+  },
+  "showFullUrl": {
+    "message": "URL全文を表示"
+  },
+  "hideFullUrl": {
+    "message": "URL全文を非表示"
+  },
+  "scanning": {
+    "message": "メールを確認中…"
+  },
+  "sampleSubject": {
+    "message": "テスト用の架空メール（実際のメールではありません）"
+  },
+  "sampleBody": {
+    "message": "Googleのパスワードを入力してください："
+  },
+  "settingsError": {
+    "message": "設定の読み込み、または保存に失敗しました。もう一度お試しください。"
+  },
+  "fileNone": {
+    "message": "ファイルは選択されていません"
+  },
+  "fileSelected": {
+    "message": "選択したファイル：{name}"
+  }
+}

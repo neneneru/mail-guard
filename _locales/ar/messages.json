@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "تحذيرات تصيد محلية لـ Gmail. فحص نص الرسالة وروابطها دون إرسال بريدك إلى خادم."
+  },
+  "active": {
+    "message": "الفحص مفعّل"
+  },
+  "paused": {
+    "message": "الفحص متوقف مؤقتًا"
+  },
+  "enable": {
+    "message": "تفعيل الفحص على الجهاز"
+  },
+  "options": {
+    "message": "الإعدادات"
+  },
+  "language": {
+    "message": "اللغة"
+  },
+  "auto": {
+    "message": "لغة المتصفح"
+  },
+  "showInfo": {
+    "message": "عرض المعلومات الإضافية أيضًا"
+  },
+  "save": {
+    "message": "حفظ الإعدادات"
+  },
+  "saved": {
+    "message": "تم الحفظ"
+  },
+  "privacy": {
+    "message": "الخصوصية"
+  },
+  "coverage": {
+    "message": "يشمل الفحص نص الرسالة وروابطها التي تستطيع الإضافة قراءتها. لا يتم التحقق من مصادقة البريد أو الصور أو رموز QR أو المرفقات أو صفحات الوجهة. غياب التحذير لا يضمن الأمان."
+  },
+  "scan": {
+    "message": "فحص رسالة محليًا"
+  },
+  "scanHelp": {
+    "message": "الصق رؤوس البريد الإلكتروني أو الرسالة كاملة، أو اختر ملف ‎.eml أو ‎.txt لتحليله باستخدام القواعد نفسها التي يستخدمها MailContext Guard للفحص التلقائي في Gmail. يُعالَج المحتوى على جهازك فقط، ولا يُرسَل إلى أي جهة خارجية ولا يُحفَظ (بحد أقصى 5 MB)."
+  },
+  "choose": {
+    "message": "اختر ‎.eml أو ‎.txt"
+  },
+  "analyze": {
+    "message": "فحص الرسالة"
+  },
+  "clear": {
+    "message": "مسح"
+  },
+  "sample": {
+    "message": "تجربة مثال خيالي"
+  },
+  "error": {
+    "message": "تعذر إكمال الفحص. تحقق من المدخلات وحد الحجم."
+  },
+  "noGmail": {
+    "message": "افتح Gmail لفحص الرسائل."
+  },
+  "noMessages": {
+    "message": "افتح رسالة في Gmail أو وسّعها. إن لم تظهر نتيجة، أعد تحميل Gmail."
+  },
+  "messages": {
+    "message": "الرسائل المفتوحة: {n}"
+  },
+  "details": {
+    "message": "عرض التفاصيل"
+  },
+  "close": {
+    "message": "إغلاق"
+  },
+  "cancel": {
+    "message": "إلغاء"
+  },
+  "proceed": {
+    "message": "فتح هذا الرابط"
+  },
+  "copy": {
+    "message": "نسخ الرابط"
+  },
+  "copied": {
+    "message": "تم النسخ"
+  },
+  "confirm": {
+    "message": "تحقق قبل الفتح"
+  },
+  "unsupported": {
+    "message": "لا يمكن للإضافة فتح هذا النوع من الروابط."
+  },
+  "target": {
+    "message": "وجهة النقر"
+  },
+  "candidate": {
+    "message": "وجهة محتملة داخل الرابط — لم تتم زيارتها"
+  },
+  "reason": {
+    "message": "سبب العرض"
+  },
+  "headers": {
+    "message": "معلومات رؤوس الرسالة"
+  },
+  "headerNote": {
+    "message": "لا تضمن هذه الميزة أن مرسل البريد الإلكتروني هو الشخص أو الجهة التي يدّعيها."
+  },
+  "refresh": {
+    "message": "تحديث"
+  },
+  "reset": {
+    "message": "إعادة ضبط الإعدادات"
+  },
+  "resetConfirm": {
+    "message": "هل تريد إعادة ضبط الإعدادات؟ سيتم تفعيل الفحص على الجهاز والمعلومات الإضافية، وستتبع لغة العرض لغة المتصفح."
+  },
+  "input": {
+    "message": "الصق الرسالة أو رؤوسها هنا…"
+  },
+  "NO_FINDINGS": {
+    "message": "لم يتم العثور على مؤشرات"
+  },
+  "INFO": {
+    "message": "معلومات إضافية"
+  },
+  "CAUTION": {
+    "message": "يُنصح بالمراجعة"
+  },
+  "WARNING": {
+    "message": "تحقق قبل المتابعة"
+  },
+  "HIGH_RISK": {
+    "message": "مؤشرات عالية الخطورة"
+  },
+  "reasonUgc": {
+    "message": "تتيح هذه الخدمة محتوى ينشئه أشخاص آخرون."
+  },
+  "reasonRedirect": {
+    "message": "لم يتم التحقق من الوجهة النهائية. الرابط المضمّن مجرد وجهة محتملة."
+  },
+  "reasonUnparsed": {
+    "message": "تعذر تحليل هذا الرابط بالكامل."
+  },
+  "reasonMismatch": {
+    "message": "يشير العنوان المعروض والرابط الفعلي إلى نطاقين مختلفين."
+  },
+  "reasonUserinfo": {
+    "message": "النص الذي يسبق @ ليس مضيف الوجهة."
+  },
+  "reasonInvisible": {
+    "message": "يحتوي الرابط على محارف خفية أو محارف لتغيير اتجاه النص."
+  },
+  "reasonAccount": {
+    "message": "إجراء يتعلق بالحساب أو الأمان يؤدي إلى محتوى لطرف ثالث."
+  },
+  "reasonSecret": {
+    "message": "تطلب الرسالة كلمة مرور أو رمزًا عبر وجهة غير مناسبة."
+  },
+  "reasonSpoof": {
+    "message": "طلب متعلق بالحساب يستخدم رابطًا يخفي مضيفه الحقيقي."
+  },
+  "reasonLookalike": {
+    "message": "يستخدم طلب يتضمن معلومات حساسة مضيفًا يشبه اسمه علامة تجارية معروفة."
+  },
+  "reasonUnknown": {
+    "message": "العلاقة بين الوجهة وإجراء الحساب المطلوب غير معروفة."
+  },
+  "reasonAmbiguous": {
+    "message": "لا يمكن ربط الطلب بالرابط بثقة."
+  },
+  "reasonScheme": {
+    "message": "نوع رابط غير مدعوم. لن تفتح الإضافة هذا الرابط."
+  },
+  "reasonForward": {
+    "message": "تحتوي رؤوس الرسالة على علامات تشير إلى إعادة توجيهها. إعادة التوجيه وحدها لا تدل على خطر."
+  },
+  "reasonReply": {
+    "message": "يختلف نطاق عنوان الرد عن نطاق المرسل. هذا الاختلاف وحده لا يدل على خطر."
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "تم فحص جزء فقط من المحتوى بسبب قيود الحجم أو التنسيق أو التحليل."
+  },
+  "unavailable": {
+    "message": "لا يوجد نص رسالة قابل للقراءة. قد تتوفر معلومات الرؤوس."
+  },
+  "settingsHelp": {
+    "message": "اختر لغة العرض وما الذي تعرضه الإضافة أثناء فحص Gmail."
+  },
+  "languageHelp": {
+    "message": "يغيّر لغة واجهة الإضافة."
+  },
+  "enableHelp": {
+    "message": "يفحص الرسائل التي تفتحها في Gmail تلقائيًا. أوقفه لإيقاف التنبيهات داخل الصفحة مؤقتًا."
+  },
+  "showInfoHelp": {
+    "message": "عند التعطيل، يمكن عرض المعلومات الإضافية من زر صغير. تظل التحذيرات وإشعارات الفحص غير المكتمل ظاهرة."
+  },
+  "shownHost": {
+    "message": "عنوان الرابط المعروض"
+  },
+  "actualHost": {
+    "message": "مضيف الرابط الفعلي"
+  },
+  "apparentTarget": {
+    "message": "النص قبل @"
+  },
+  "suspiciousChars": {
+    "message": "أحرف مريبة"
+  },
+  "requestedAction": {
+    "message": "الإجراء المطلوب"
+  },
+  "destinationHost": {
+    "message": "الوجهة"
+  },
+  "destinationType": {
+    "message": "نوع الوجهة"
+  },
+  "candidateHost": {
+    "message": "وجهة محتملة"
+  },
+  "thirdPartyContent": {
+    "message": "محتوى تابع لجهة خارجية"
+  },
+  "actionSecret": {
+    "message": "إدخال كلمة مرور أو رمز تحقق"
+  },
+  "actionAccount": {
+    "message": "إجراء متعلق بالحساب أو تسجيل الدخول"
+  },
+  "actionShared": {
+    "message": "فتح محتوى مشترك"
+  },
+  "actionOpen": {
+    "message": "فتح الرابط"
+  },
+  "unknown": {
+    "message": "فحص غير مكتمل"
+  },
+  "occurrences": {
+    "message": "عدد المواضع: {n}"
+  },
+  "context": {
+    "message": "النص المحيط"
+  },
+  "linkText": {
+    "message": "نص الرابط"
+  },
+  "otherFindings": {
+    "message": "ملاحظات أخرى: {n}"
+  },
+  "linkInput": {
+    "message": "الرابط غير المحلل"
+  },
+  "privacyChecks": {
+    "message": "يفحص على هذا الجهاز النص الظاهر والروابط في الرسائل التي تفتحها في Gmail، ومحتوى البريد الذي تلصقه أو تختاره من ملفات ‎.eml أو ‎.txt."
+  },
+  "privacyExclusions": {
+    "message": "لا يتحقق من الصور أو رموز QR أو المرفقات أو صفحات الوجهة."
+  },
+  "privacyStorage": {
+    "message": "لا ترسل الإضافة محتوى البريد خارج هذا الجهاز ولا تحفظه. تحفظ الإعدادات فقط."
+  },
+  "privacyDisclaimer": {
+    "message": "غياب التحذير لا يضمن الأمان أو صحة هوية المرسل."
+  },
+  "linkCount": {
+    "message": "عدد الروابط: {n}"
+  },
+  "groupLinkCount": {
+    "message": "المجموعات: {groups} · الروابط: {links}"
+  },
+  "locateLink": {
+    "message": "الانتقال إلى الموضع"
+  },
+  "linkChanged": {
+    "message": "تغير الرابط؛ جارٍ الفحص"
+  },
+  "warningMarker": {
+    "message": "تحقق"
+  },
+  "locateWarning": {
+    "message": "الانتقال إلى الموضع"
+  },
+  "copyUnavailable": {
+    "message": "النسخ غير متاح"
+  },
+  "markerTarget": {
+    "message": "وجهة الرابط"
+  },
+  "showFullUrl": {
+    "message": "عرض الرابط الكامل"
+  },
+  "hideFullUrl": {
+    "message": "إخفاء الرابط الكامل"
+  },
+  "scanning": {
+    "message": "جارٍ فحص الرسالة…"
+  },
+  "sampleSubject": {
+    "message": "رسالة اختبار خيالية؛ ليست رسالة بريد حقيقية"
+  },
+  "sampleBody": {
+    "message": "أدخل كلمة المرور لحسابك في Google:"
+  },
+  "settingsError": {
+    "message": "تعذرت قراءة الإعدادات أو حفظها. حاول مرة أخرى."
+  },
+  "fileNone": {
+    "message": "لم يتم اختيار ملف"
+  },
+  "fileSelected": {
+    "message": "الملف المحدد: {name}"
+  }
+}

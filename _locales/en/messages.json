@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "Local phishing warnings for Gmail. Check message context and links without sending your email to a server."
+  },
+  "active": {
+    "message": "Checks enabled"
+  },
+  "paused": {
+    "message": "Checks paused"
+  },
+  "enable": {
+    "message": "Enable local checks"
+  },
+  "options": {
+    "message": "Settings"
+  },
+  "language": {
+    "message": "Language"
+  },
+  "auto": {
+    "message": "Browser language"
+  },
+  "showInfo": {
+    "message": "Also show additional information"
+  },
+  "save": {
+    "message": "Save settings"
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "privacy": {
+    "message": "Privacy"
+  },
+  "coverage": {
+    "message": "Checks cover the message text and links available to the extension. Email authentication, images, QR codes, attachments, and destination pages are not verified. A missing warning is not a safety guarantee."
+  },
+  "scan": {
+    "message": "Local message check"
+  },
+  "scanHelp": {
+    "message": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as MailContext Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB)."
+  },
+  "choose": {
+    "message": "Choose .eml or .txt"
+  },
+  "analyze": {
+    "message": "Check message"
+  },
+  "clear": {
+    "message": "Clear"
+  },
+  "sample": {
+    "message": "Try a fictional sample"
+  },
+  "error": {
+    "message": "Unable to complete this check. Check the input and size limit."
+  },
+  "noGmail": {
+    "message": "Open Gmail to check messages."
+  },
+  "noMessages": {
+    "message": "Open or expand a message in Gmail. If no result appears, reload Gmail."
+  },
+  "messages": {
+    "message": "Open messages: {n}"
+  },
+  "details": {
+    "message": "View details"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "proceed": {
+    "message": "Open this link"
+  },
+  "copy": {
+    "message": "Copy URL"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "confirm": {
+    "message": "Check before you open"
+  },
+  "unsupported": {
+    "message": "This type of link cannot be opened by the extension."
+  },
+  "target": {
+    "message": "Click destination"
+  },
+  "candidate": {
+    "message": "Embedded destination candidate — not visited"
+  },
+  "reason": {
+    "message": "Why this is shown"
+  },
+  "headers": {
+    "message": "Header information"
+  },
+  "headerNote": {
+    "message": "This feature does not guarantee that an email’s sender is genuine."
+  },
+  "refresh": {
+    "message": "Refresh"
+  },
+  "reset": {
+    "message": "Reset settings"
+  },
+  "resetConfirm": {
+    "message": "Reset settings? Local checks and additional information will be enabled, and the display language will follow your browser."
+  },
+  "input": {
+    "message": "Paste a message or headers here…"
+  },
+  "NO_FINDINGS": {
+    "message": "No indicators found"
+  },
+  "INFO": {
+    "message": "Additional information"
+  },
+  "CAUTION": {
+    "message": "Review recommended"
+  },
+  "WARNING": {
+    "message": "Check before acting"
+  },
+  "HIGH_RISK": {
+    "message": "High-risk indicators"
+  },
+  "reasonUgc": {
+    "message": "This service can host content created by other people."
+  },
+  "reasonRedirect": {
+    "message": "The final destination is not verified. An embedded URL is only a candidate."
+  },
+  "reasonUnparsed": {
+    "message": "This link could not be fully parsed."
+  },
+  "reasonMismatch": {
+    "message": "The displayed URL and actual link point to different domains."
+  },
+  "reasonUserinfo": {
+    "message": "Text before @ is not the destination host."
+  },
+  "reasonInvisible": {
+    "message": "Invisible or text-direction characters appear in this link."
+  },
+  "reasonAccount": {
+    "message": "An account or security action points to third-party content."
+  },
+  "reasonSecret": {
+    "message": "The message requests a password or code through an unsuitable destination."
+  },
+  "reasonSpoof": {
+    "message": "An account-related request uses a link that disguises its real host."
+  },
+  "reasonLookalike": {
+    "message": "This host resembles a known brand in a sensitive request."
+  },
+  "reasonUnknown": {
+    "message": "The relationship between this destination and the requested account action is unknown."
+  },
+  "reasonAmbiguous": {
+    "message": "The request and link cannot be linked confidently."
+  },
+  "reasonScheme": {
+    "message": "Unsupported link type. No navigation is performed by the extension."
+  },
+  "reasonForward": {
+    "message": "Headers contain signs consistent with forwarding. Forwarding alone does not indicate danger."
+  },
+  "reasonReply": {
+    "message": "Reply and sender domains differ. This difference alone does not indicate danger."
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "Only part of this input could be checked. Size, format or parsing limits left some content uninspected."
+  },
+  "unavailable": {
+    "message": "There is no readable message body to check. Header details may still be available."
+  },
+  "settingsHelp": {
+    "message": "Choose the display language and what the extension shows while checking Gmail."
+  },
+  "languageHelp": {
+    "message": "Changes the language used in the extension UI."
+  },
+  "enableHelp": {
+    "message": "Automatically checks messages you open in Gmail. Turn this off to pause on-page warnings."
+  },
+  "showInfoHelp": {
+    "message": "When off, additional information is available from a small button. Warnings and incomplete-check notices remain visible."
+  },
+  "shownHost": {
+    "message": "Link display"
+  },
+  "actualHost": {
+    "message": "Actual destination host"
+  },
+  "apparentTarget": {
+    "message": "Text before @"
+  },
+  "suspiciousChars": {
+    "message": "Suspicious characters"
+  },
+  "requestedAction": {
+    "message": "Requested action"
+  },
+  "destinationHost": {
+    "message": "Destination"
+  },
+  "destinationType": {
+    "message": "Destination type"
+  },
+  "candidateHost": {
+    "message": "Possible destination"
+  },
+  "thirdPartyContent": {
+    "message": "third-party content"
+  },
+  "actionSecret": {
+    "message": "Password or verification code entry"
+  },
+  "actionAccount": {
+    "message": "Account or sign-in action"
+  },
+  "actionShared": {
+    "message": "Open shared content"
+  },
+  "actionOpen": {
+    "message": "Open link"
+  },
+  "unknown": {
+    "message": "Incomplete check"
+  },
+  "occurrences": {
+    "message": "Occurrences: {n}"
+  },
+  "context": {
+    "message": "Nearby text"
+  },
+  "linkText": {
+    "message": "Link text"
+  },
+  "otherFindings": {
+    "message": "Other findings: {n}"
+  },
+  "linkInput": {
+    "message": "Unparsed link input"
+  },
+  "privacyChecks": {
+    "message": "Checks the visible text and links of messages you open in Gmail, plus email content you paste or select from .eml or .txt files, on this device."
+  },
+  "privacyExclusions": {
+    "message": "Does not verify images, QR codes, attachments, or destination pages."
+  },
+  "privacyStorage": {
+    "message": "The extension does not send email content outside this device or save it. Only settings are saved."
+  },
+  "privacyDisclaimer": {
+    "message": "A missing warning does not guarantee safety or an authentic sender."
+  },
+  "linkCount": {
+    "message": "Links: {n}"
+  },
+  "groupLinkCount": {
+    "message": "Groups: {groups} · links: {links}"
+  },
+  "locateLink": {
+    "message": "Go to location"
+  },
+  "linkChanged": {
+    "message": "Link changed; checking again"
+  },
+  "warningMarker": {
+    "message": "Check"
+  },
+  "locateWarning": {
+    "message": "Go to location"
+  },
+  "copyUnavailable": {
+    "message": "Unable to copy"
+  },
+  "markerTarget": {
+    "message": "Link destination"
+  },
+  "showFullUrl": {
+    "message": "Show full URL"
+  },
+  "hideFullUrl": {
+    "message": "Hide full URL"
+  },
+  "scanning": {
+    "message": "Checking message…"
+  },
+  "sampleSubject": {
+    "message": "Fictional test message; not a real email"
+  },
+  "sampleBody": {
+    "message": "Enter your Google password:"
+  },
+  "settingsError": {
+    "message": "Unable to read or save settings. Try again."
+  },
+  "fileNone": {
+    "message": "No file selected"
+  },
+  "fileSelected": {
+    "message": "Selected file: {name}"
+  }
+}

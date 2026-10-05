@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "Gmail 이메일의 문맥과 링크를 기기에서 확인해 피싱 위험 징후를 알려 줍니다. 이메일은 서버로 전송하지 않습니다."
+  },
+  "active": {
+    "message": "검사 켜짐"
+  },
+  "paused": {
+    "message": "검사 일시 중지됨"
+  },
+  "enable": {
+    "message": "기기 내 검사 사용"
+  },
+  "options": {
+    "message": "설정"
+  },
+  "language": {
+    "message": "언어"
+  },
+  "auto": {
+    "message": "브라우저 언어"
+  },
+  "showInfo": {
+    "message": "추가 정보도 표시"
+  },
+  "save": {
+    "message": "설정 저장"
+  },
+  "saved": {
+    "message": "저장됨"
+  },
+  "privacy": {
+    "message": "개인정보 보호"
+  },
+  "coverage": {
+    "message": "확장 프로그램이 읽을 수 있는 메시지의 텍스트와 링크를 검사합니다. 이메일 인증 여부, 이미지, QR 코드, 첨부파일, 링크의 목적지 페이지는 검증하지 않습니다. 경고가 없다고 해서 안전이 보장되지는 않습니다."
+  },
+  "scan": {
+    "message": "기기 내 메시지 검사"
+  },
+  "scanHelp": {
+    "message": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 MailContext Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB)."
+  },
+  "choose": {
+    "message": ".eml 또는 .txt 파일 선택"
+  },
+  "analyze": {
+    "message": "메시지 검사"
+  },
+  "clear": {
+    "message": "지우기"
+  },
+  "sample": {
+    "message": "가상 예시로 테스트"
+  },
+  "error": {
+    "message": "검사를 완료할 수 없습니다. 입력 내용과 크기 제한을 확인해 주세요."
+  },
+  "noGmail": {
+    "message": "Gmail을 열어 메시지를 검사해 주세요."
+  },
+  "noMessages": {
+    "message": "Gmail에서 메시지를 열거나 펼쳐 주세요. 결과가 표시되지 않으면 Gmail을 새로고침해 주세요."
+  },
+  "messages": {
+    "message": "열린 메시지: {n}개"
+  },
+  "details": {
+    "message": "세부 정보 보기"
+  },
+  "close": {
+    "message": "닫기"
+  },
+  "cancel": {
+    "message": "취소"
+  },
+  "proceed": {
+    "message": "이 링크 열기"
+  },
+  "copy": {
+    "message": "URL 복사"
+  },
+  "copied": {
+    "message": "복사됨"
+  },
+  "confirm": {
+    "message": "열기 전에 확인해 주세요"
+  },
+  "unsupported": {
+    "message": "이 유형의 링크는 확장 프로그램에서 열 수 없습니다."
+  },
+  "target": {
+    "message": "클릭 시 이동할 주소"
+  },
+  "candidate": {
+    "message": "링크에 포함된 목적지 후보 · 방문하지 않음"
+  },
+  "reason": {
+    "message": "표시 이유"
+  },
+  "headers": {
+    "message": "헤더 정보"
+  },
+  "headerNote": {
+    "message": "이 기능은 이메일 발신자가 진짜인지 보장하지 않습니다."
+  },
+  "refresh": {
+    "message": "새로고침"
+  },
+  "reset": {
+    "message": "설정 초기화"
+  },
+  "resetConfirm": {
+    "message": "설정을 초기화할까요? 기기 내 검사와 추가 정보 표시가 켜지고, 표시 언어는 브라우저 언어를 따릅니다."
+  },
+  "input": {
+    "message": "메시지나 헤더를 여기에 붙여넣으세요…"
+  },
+  "NO_FINDINGS": {
+    "message": "위험 징후가 발견되지 않음"
+  },
+  "INFO": {
+    "message": "추가 정보"
+  },
+  "CAUTION": {
+    "message": "검토 권장"
+  },
+  "WARNING": {
+    "message": "진행 전에 확인 필요"
+  },
+  "HIGH_RISK": {
+    "message": "높은 위험을 나타내는 징후"
+  },
+  "reasonUgc": {
+    "message": "이 서비스에는 다른 사람이 작성한 콘텐츠가 게시될 수 있습니다."
+  },
+  "reasonRedirect": {
+    "message": "최종 목적지는 검증되지 않았습니다. 링크에 포함된 URL은 목적지 후보일 뿐입니다."
+  },
+  "reasonUnparsed": {
+    "message": "이 링크를 완전히 분석하지 못했습니다."
+  },
+  "reasonMismatch": {
+    "message": "표시된 URL과 실제 링크가 서로 다른 도메인을 가리킵니다."
+  },
+  "reasonUserinfo": {
+    "message": "@ 앞의 텍스트는 목적지 호스트가 아닙니다."
+  },
+  "reasonInvisible": {
+    "message": "이 링크에 보이지 않는 문자나 텍스트 방향 제어 문자가 포함되어 있습니다."
+  },
+  "reasonAccount": {
+    "message": "계정 또는 보안 관련 조치를 요청하면서 제3자가 작성한 콘텐츠로 연결합니다."
+  },
+  "reasonSecret": {
+    "message": "적절하지 않은 목적지를 통해 비밀번호나 코드를 요구합니다."
+  },
+  "reasonSpoof": {
+    "message": "계정 관련 요청에 실제 호스트를 오인하게 할 수 있는 링크가 사용되었습니다."
+  },
+  "reasonLookalike": {
+    "message": "민감한 정보를 다루는 요청에서 알려진 브랜드와 유사한 호스트가 사용되었습니다."
+  },
+  "reasonUnknown": {
+    "message": "이 목적지와 요청된 계정 관련 조치의 관계를 알 수 없습니다."
+  },
+  "reasonAmbiguous": {
+    "message": "요청과 링크가 연결되어 있는지 확실하게 판단할 수 없습니다."
+  },
+  "reasonScheme": {
+    "message": "지원하지 않는 링크 유형입니다. 확장 프로그램은 이 링크로 이동하지 않습니다."
+  },
+  "reasonForward": {
+    "message": "헤더에 전달된 이메일에서 볼 수 있는 징후가 있습니다. 전달 사실만으로 위험하다고 판단하지 않습니다."
+  },
+  "reasonReply": {
+    "message": "회신 주소와 발신자 주소의 도메인이 다릅니다. 이 차이만으로 위험하다고 판단하지 않습니다."
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "입력 내용의 일부만 검사했습니다. 크기, 형식 또는 분석 한계로 검사하지 못한 내용이 있습니다."
+  },
+  "unavailable": {
+    "message": "읽을 수 있는 메시지 본문이 없어 검사할 수 없습니다. 헤더 정보는 제공될 수 있습니다."
+  },
+  "settingsHelp": {
+    "message": "Gmail을 검사할 때 사용할 표시 언어와 확장 프로그램이 보여 줄 정보를 선택해 주세요."
+  },
+  "languageHelp": {
+    "message": "확장 프로그램 화면에 표시되는 언어를 변경합니다."
+  },
+  "enableHelp": {
+    "message": "Gmail에서 여는 메시지를 자동으로 검사합니다. 이 설정을 끄면 페이지 내 경고가 일시 중지됩니다."
+  },
+  "showInfoHelp": {
+    "message": "끄면 작은 버튼을 눌러 추가 정보를 볼 수 있습니다. 경고와 불완전한 검사 안내는 계속 표시됩니다."
+  },
+  "shownHost": {
+    "message": "링크에 표시된 주소"
+  },
+  "actualHost": {
+    "message": "실제 목적지 호스트"
+  },
+  "apparentTarget": {
+    "message": "@ 앞의 텍스트"
+  },
+  "suspiciousChars": {
+    "message": "의심스러운 문자"
+  },
+  "requestedAction": {
+    "message": "요청된 조치"
+  },
+  "destinationHost": {
+    "message": "목적지"
+  },
+  "destinationType": {
+    "message": "목적지 유형"
+  },
+  "candidateHost": {
+    "message": "가능한 목적지"
+  },
+  "thirdPartyContent": {
+    "message": "제3자 작성 콘텐츠"
+  },
+  "actionSecret": {
+    "message": "비밀번호 또는 인증 코드 입력"
+  },
+  "actionAccount": {
+    "message": "계정 또는 로그인 관련 조치"
+  },
+  "actionShared": {
+    "message": "공유 콘텐츠 열기"
+  },
+  "actionOpen": {
+    "message": "링크 열기"
+  },
+  "unknown": {
+    "message": "불완전한 검사"
+  },
+  "occurrences": {
+    "message": "등장 횟수: {n}회"
+  },
+  "context": {
+    "message": "주변 텍스트"
+  },
+  "linkText": {
+    "message": "링크 텍스트"
+  },
+  "otherFindings": {
+    "message": "기타 발견 사항: {n}개"
+  },
+  "linkInput": {
+    "message": "분석하지 못한 링크 입력값"
+  },
+  "privacyChecks": {
+    "message": "Gmail에서 여는 메시지의 화면에 표시된 텍스트와 링크를 이 기기에서 검사합니다. 붙여넣은 이메일 내용과 선택한 .eml 또는 .txt 파일의 내용도 검사합니다."
+  },
+  "privacyExclusions": {
+    "message": "이미지, QR 코드, 첨부파일, 링크의 목적지 페이지는 검증하지 않습니다."
+  },
+  "privacyStorage": {
+    "message": "확장 프로그램은 이메일 내용을 이 기기 외부로 전송하거나 저장하지 않습니다. 설정만 저장합니다."
+  },
+  "privacyDisclaimer": {
+    "message": "경고가 없다고 해서 안전하거나 발신자가 진짜라고 보장하지 않습니다."
+  },
+  "linkCount": {
+    "message": "링크: {n}개"
+  },
+  "groupLinkCount": {
+    "message": "그룹: {groups}개 · 링크: {links}개"
+  },
+  "locateLink": {
+    "message": "해당 위치로 이동"
+  },
+  "linkChanged": {
+    "message": "링크가 변경되어 다시 검사 중"
+  },
+  "warningMarker": {
+    "message": "확인 필요"
+  },
+  "locateWarning": {
+    "message": "해당 위치로 이동"
+  },
+  "copyUnavailable": {
+    "message": "복사할 수 없음"
+  },
+  "markerTarget": {
+    "message": "링크 목적지"
+  },
+  "showFullUrl": {
+    "message": "전체 URL 표시"
+  },
+  "hideFullUrl": {
+    "message": "전체 URL 숨기기"
+  },
+  "scanning": {
+    "message": "메시지 검사 중…"
+  },
+  "sampleSubject": {
+    "message": "가상의 테스트 메시지이며 실제 이메일이 아닙니다"
+  },
+  "sampleBody": {
+    "message": "Google 비밀번호를 입력해 주세요:"
+  },
+  "settingsError": {
+    "message": "설정을 읽거나 저장할 수 없습니다. 다시 시도해 주세요."
+  },
+  "fileNone": {
+    "message": "선택된 파일 없음"
+  },
+  "fileSelected": {
+    "message": "선택된 파일: {name}"
+  }
+}

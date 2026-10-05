@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "Peringatan phishing lokal untuk Gmail. Periksa teks dan tautan tanpa mengirim email ke server."
+  },
+  "active": {
+    "message": "Pemeriksaan aktif"
+  },
+  "paused": {
+    "message": "Pemeriksaan dijeda"
+  },
+  "enable": {
+    "message": "Aktifkan pemeriksaan lokal"
+  },
+  "options": {
+    "message": "Setelan"
+  },
+  "language": {
+    "message": "Bahasa"
+  },
+  "auto": {
+    "message": "Bahasa browser"
+  },
+  "showInfo": {
+    "message": "Tampilkan juga informasi tambahan"
+  },
+  "save": {
+    "message": "Simpan setelan"
+  },
+  "saved": {
+    "message": "Tersimpan"
+  },
+  "privacy": {
+    "message": "Privasi"
+  },
+  "coverage": {
+    "message": "Pemeriksaan mencakup teks dan tautan email yang dapat dibaca oleh ekstensi. Autentikasi email, gambar, kode QR, lampiran, dan halaman tujuan tidak diverifikasi. Tidak adanya peringatan bukan jaminan keamanan."
+  },
+  "scan": {
+    "message": "Pemeriksaan email lokal"
+  },
+  "scanHelp": {
+    "message": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis MailContext Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB)."
+  },
+  "choose": {
+    "message": "Pilih .eml atau .txt"
+  },
+  "analyze": {
+    "message": "Periksa email"
+  },
+  "clear": {
+    "message": "Hapus"
+  },
+  "sample": {
+    "message": "Coba contoh fiktif"
+  },
+  "error": {
+    "message": "Pemeriksaan tidak dapat diselesaikan. Periksa masukan dan batas ukuran."
+  },
+  "noGmail": {
+    "message": "Buka Gmail untuk memeriksa email."
+  },
+  "noMessages": {
+    "message": "Buka atau bentangkan pesan di Gmail. Jika hasil tidak muncul, muat ulang Gmail."
+  },
+  "messages": {
+    "message": "{n} pesan terbuka"
+  },
+  "details": {
+    "message": "Lihat detail"
+  },
+  "close": {
+    "message": "Tutup"
+  },
+  "cancel": {
+    "message": "Batal"
+  },
+  "proceed": {
+    "message": "Buka tautan ini"
+  },
+  "copy": {
+    "message": "Salin URL"
+  },
+  "copied": {
+    "message": "Tersalin"
+  },
+  "confirm": {
+    "message": "Periksa sebelum membuka"
+  },
+  "unsupported": {
+    "message": "Ekstensi tidak dapat membuka jenis tautan ini."
+  },
+  "target": {
+    "message": "Tujuan klik"
+  },
+  "candidate": {
+    "message": "Kemungkinan tujuan dalam URL — belum dikunjungi"
+  },
+  "reason": {
+    "message": "Alasan ditampilkan"
+  },
+  "headers": {
+    "message": "Informasi header"
+  },
+  "headerNote": {
+    "message": "Fitur ini tidak menjamin keaslian pengirim email."
+  },
+  "refresh": {
+    "message": "Muat ulang"
+  },
+  "reset": {
+    "message": "Setel ulang setelan"
+  },
+  "resetConfirm": {
+    "message": "Setel ulang setelan? Pemeriksaan lokal dan informasi tambahan akan diaktifkan, dan bahasa tampilan akan mengikuti bahasa browser."
+  },
+  "input": {
+    "message": "Tempel pesan atau header di sini…"
+  },
+  "NO_FINDINGS": {
+    "message": "Tidak ditemukan indikasi"
+  },
+  "INFO": {
+    "message": "Informasi tambahan"
+  },
+  "CAUTION": {
+    "message": "Disarankan untuk meninjau"
+  },
+  "WARNING": {
+    "message": "Periksa sebelum bertindak"
+  },
+  "HIGH_RISK": {
+    "message": "Indikator risiko tinggi"
+  },
+  "reasonUgc": {
+    "message": "Layanan ini dapat menampung konten buatan orang lain."
+  },
+  "reasonRedirect": {
+    "message": "Tujuan akhir belum diverifikasi. URL di dalam tautan hanya kemungkinan tujuan."
+  },
+  "reasonUnparsed": {
+    "message": "Tautan ini tidak dapat dianalisis sepenuhnya."
+  },
+  "reasonMismatch": {
+    "message": "URL yang ditampilkan dan tautan sebenarnya mengarah ke domain berbeda."
+  },
+  "reasonUserinfo": {
+    "message": "Teks sebelum @ bukan host tujuan."
+  },
+  "reasonInvisible": {
+    "message": "Tautan berisi karakter tak terlihat atau pengubah arah teks."
+  },
+  "reasonAccount": {
+    "message": "Tindakan akun atau keamanan mengarah ke konten pihak ketiga."
+  },
+  "reasonSecret": {
+    "message": "Pesan meminta kata sandi atau kode melalui tujuan yang tidak sesuai."
+  },
+  "reasonSpoof": {
+    "message": "Permintaan terkait akun menggunakan tautan yang menyamarkan host sebenarnya."
+  },
+  "reasonLookalike": {
+    "message": "Dalam permintaan yang melibatkan informasi sensitif, nama host menyerupai merek yang dikenal."
+  },
+  "reasonUnknown": {
+    "message": "Hubungan antara tujuan dan tindakan akun yang diminta belum diketahui."
+  },
+  "reasonAmbiguous": {
+    "message": "Hubungan antara permintaan dan tautan tidak dapat dipastikan."
+  },
+  "reasonScheme": {
+    "message": "Jenis tautan tidak didukung. Ekstensi tidak akan membukanya."
+  },
+  "reasonForward": {
+    "message": "Header menunjukkan tanda penerusan email. Penerusan saja tidak menunjukkan bahaya."
+  },
+  "reasonReply": {
+    "message": "Domain alamat balasan dan pengirim berbeda. Perbedaan ini saja tidak menunjukkan bahaya."
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "Hanya sebagian isi yang diperiksa karena batas ukuran, format, atau penguraian."
+  },
+  "unavailable": {
+    "message": "Tidak ada isi pesan yang dapat dibaca. Informasi header mungkin tersedia."
+  },
+  "settingsHelp": {
+    "message": "Pilih bahasa tampilan dan informasi apa yang ditampilkan ekstensi saat memeriksa Gmail."
+  },
+  "languageHelp": {
+    "message": "Mengubah bahasa antarmuka ekstensi."
+  },
+  "enableHelp": {
+    "message": "Secara otomatis memeriksa pesan yang Anda buka di Gmail. Matikan untuk menjeda peringatan pada halaman."
+  },
+  "showInfoHelp": {
+    "message": "Saat dinonaktifkan, informasi tambahan dapat dibuka melalui tombol kecil. Peringatan dan pemberitahuan pemeriksaan yang belum lengkap tetap terlihat."
+  },
+  "shownHost": {
+    "message": "URL yang ditampilkan"
+  },
+  "actualHost": {
+    "message": "Host tautan sebenarnya"
+  },
+  "apparentTarget": {
+    "message": "Teks sebelum @"
+  },
+  "suspiciousChars": {
+    "message": "Karakter mencurigakan"
+  },
+  "requestedAction": {
+    "message": "Tindakan yang diminta"
+  },
+  "destinationHost": {
+    "message": "Tujuan"
+  },
+  "destinationType": {
+    "message": "Jenis tujuan"
+  },
+  "candidateHost": {
+    "message": "Kemungkinan tujuan"
+  },
+  "thirdPartyContent": {
+    "message": "konten pihak ketiga"
+  },
+  "actionSecret": {
+    "message": "Memasukkan kata sandi atau kode verifikasi"
+  },
+  "actionAccount": {
+    "message": "Tindakan akun atau masuk"
+  },
+  "actionShared": {
+    "message": "Buka konten bersama"
+  },
+  "actionOpen": {
+    "message": "Buka tautan"
+  },
+  "unknown": {
+    "message": "Pemeriksaan belum lengkap"
+  },
+  "occurrences": {
+    "message": "{n} kemunculan"
+  },
+  "context": {
+    "message": "Teks sekitar"
+  },
+  "linkText": {
+    "message": "Teks tautan"
+  },
+  "otherFindings": {
+    "message": "{n} temuan lainnya"
+  },
+  "linkInput": {
+    "message": "Tautan belum diurai"
+  },
+  "privacyChecks": {
+    "message": "Memeriksa di perangkat ini teks yang terlihat dan tautan pada email yang Anda buka di Gmail, serta isi email yang Anda tempel atau pilih dari file .eml atau .txt."
+  },
+  "privacyExclusions": {
+    "message": "Tidak memverifikasi gambar, kode QR, lampiran, atau halaman tujuan."
+  },
+  "privacyStorage": {
+    "message": "Ekstensi tidak mengirim isi email ke luar perangkat ini atau menyimpannya. Hanya setelan yang disimpan."
+  },
+  "privacyDisclaimer": {
+    "message": "Tidak adanya peringatan tidak menjamin keamanan atau keaslian pengirim."
+  },
+  "linkCount": {
+    "message": "{n} tautan"
+  },
+  "groupLinkCount": {
+    "message": "{groups} grup · {links} tautan"
+  },
+  "locateLink": {
+    "message": "Buka lokasi terkait"
+  },
+  "linkChanged": {
+    "message": "Tautan berubah; memeriksa ulang"
+  },
+  "warningMarker": {
+    "message": "Periksa"
+  },
+  "locateWarning": {
+    "message": "Buka lokasi terkait"
+  },
+  "copyUnavailable": {
+    "message": "Tidak dapat menyalin"
+  },
+  "markerTarget": {
+    "message": "Tujuan tautan"
+  },
+  "showFullUrl": {
+    "message": "Tampilkan URL lengkap"
+  },
+  "hideFullUrl": {
+    "message": "Sembunyikan URL lengkap"
+  },
+  "scanning": {
+    "message": "Memeriksa email…"
+  },
+  "sampleSubject": {
+    "message": "Pesan uji fiktif; bukan email sungguhan"
+  },
+  "sampleBody": {
+    "message": "Masukkan kata sandi akun Google Anda:"
+  },
+  "settingsError": {
+    "message": "Tidak dapat membaca atau menyimpan setelan. Coba lagi."
+  },
+  "fileNone": {
+    "message": "Belum ada file yang dipilih"
+  },
+  "fileSelected": {
+    "message": "File yang dipilih: {name}"
+  }
+}

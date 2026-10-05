@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "Alertas locales de suplantación de identidad en Gmail. Revisa texto y enlaces sin enviar tus correos a un servidor."
+  },
+  "active": {
+    "message": "Revisión activada"
+  },
+  "paused": {
+    "message": "Revisión en pausa"
+  },
+  "enable": {
+    "message": "Activar revisión local"
+  },
+  "options": {
+    "message": "Ajustes"
+  },
+  "language": {
+    "message": "Idioma"
+  },
+  "auto": {
+    "message": "Idioma del navegador"
+  },
+  "showInfo": {
+    "message": "Mostrar también información adicional"
+  },
+  "save": {
+    "message": "Guardar ajustes"
+  },
+  "saved": {
+    "message": "Guardado"
+  },
+  "privacy": {
+    "message": "Privacidad"
+  },
+  "coverage": {
+    "message": "Se revisan el texto y los enlaces del correo que la extensión puede leer. No se verifican la autenticación del correo, las imágenes, los códigos QR, los adjuntos ni las páginas de destino. La ausencia de advertencias no garantiza la seguridad."
+  },
+  "scan": {
+    "message": "Revisión local de correo"
+  },
+  "scanHelp": {
+    "message": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de MailContext Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB)."
+  },
+  "choose": {
+    "message": "Elegir .eml o .txt"
+  },
+  "analyze": {
+    "message": "Revisar correo"
+  },
+  "clear": {
+    "message": "Borrar"
+  },
+  "sample": {
+    "message": "Probar un ejemplo ficticio"
+  },
+  "error": {
+    "message": "No se pudo completar la revisión. Comprueba la entrada y el límite de tamaño."
+  },
+  "noGmail": {
+    "message": "Abre Gmail para revisar correos."
+  },
+  "noMessages": {
+    "message": "Abre o despliega un correo en Gmail. Si no aparece un resultado, recarga Gmail."
+  },
+  "messages": {
+    "message": "Correos abiertos: {n}"
+  },
+  "details": {
+    "message": "Ver detalles"
+  },
+  "close": {
+    "message": "Cerrar"
+  },
+  "cancel": {
+    "message": "Cancelar"
+  },
+  "proceed": {
+    "message": "Abrir este enlace"
+  },
+  "copy": {
+    "message": "Copiar URL"
+  },
+  "copied": {
+    "message": "Copiado"
+  },
+  "confirm": {
+    "message": "Revisa antes de abrir"
+  },
+  "unsupported": {
+    "message": "La extensión no puede abrir este tipo de enlace."
+  },
+  "target": {
+    "message": "Destino del clic"
+  },
+  "candidate": {
+    "message": "Posible destino incluido en la URL — no visitado"
+  },
+  "reason": {
+    "message": "Motivo del aviso"
+  },
+  "headers": {
+    "message": "Información de cabeceras"
+  },
+  "headerNote": {
+    "message": "Esta función no garantiza que el remitente del correo sea auténtico."
+  },
+  "refresh": {
+    "message": "Actualizar"
+  },
+  "reset": {
+    "message": "Restablecer ajustes"
+  },
+  "resetConfirm": {
+    "message": "¿Restablecer los ajustes? Se activarán la revisión local y la información adicional, y se usará el idioma del navegador."
+  },
+  "input": {
+    "message": "Pega aquí el correo o las cabeceras…"
+  },
+  "NO_FINDINGS": {
+    "message": "No se encontraron indicios"
+  },
+  "INFO": {
+    "message": "Información adicional"
+  },
+  "CAUTION": {
+    "message": "Se recomienda revisar"
+  },
+  "WARNING": {
+    "message": "Revisa antes de actuar"
+  },
+  "HIGH_RISK": {
+    "message": "Indicadores de alto riesgo"
+  },
+  "reasonUgc": {
+    "message": "Este servicio puede alojar contenido creado por otras personas."
+  },
+  "reasonRedirect": {
+    "message": "El destino final no está verificado. Una URL incluida es solo un posible destino."
+  },
+  "reasonUnparsed": {
+    "message": "No se pudo analizar completamente este enlace."
+  },
+  "reasonMismatch": {
+    "message": "La URL mostrada y el enlace real apuntan a dominios distintos."
+  },
+  "reasonUserinfo": {
+    "message": "El texto antes de @ no es el servidor de destino."
+  },
+  "reasonInvisible": {
+    "message": "El enlace contiene caracteres invisibles o de dirección de texto."
+  },
+  "reasonAccount": {
+    "message": "Una acción de cuenta o seguridad apunta a contenido de terceros."
+  },
+  "reasonSecret": {
+    "message": "El mensaje pide una contraseña o código a través de un destino inadecuado."
+  },
+  "reasonSpoof": {
+    "message": "Una solicitud relacionada con una cuenta usa un enlace que oculta su servidor de destino real."
+  },
+  "reasonLookalike": {
+    "message": "El servidor de destino se parece a una marca conocida en una solicitud que implica información sensible."
+  },
+  "reasonUnknown": {
+    "message": "Se desconoce la relación entre el destino y la acción de cuenta solicitada."
+  },
+  "reasonAmbiguous": {
+    "message": "No se puede vincular con certeza la solicitud al enlace."
+  },
+  "reasonScheme": {
+    "message": "Tipo de enlace no compatible. La extensión no abre este enlace."
+  },
+  "reasonForward": {
+    "message": "Las cabeceras contienen indicios de reenvío. El reenvío por sí solo no indica peligro."
+  },
+  "reasonReply": {
+    "message": "Los dominios de respuesta y del remitente son distintos. Esta diferencia por sí sola no indica peligro."
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "Solo se pudo revisar parte del contenido debido a límites de tamaño, formato o análisis."
+  },
+  "unavailable": {
+    "message": "No hay un cuerpo de mensaje legible. Puede haber información de cabeceras."
+  },
+  "settingsHelp": {
+    "message": "Elige el idioma y qué información muestra la extensión al revisar Gmail."
+  },
+  "languageHelp": {
+    "message": "Cambia el idioma de la interfaz de la extensión."
+  },
+  "enableHelp": {
+    "message": "Analiza automáticamente los mensajes que abras en Gmail. Desactívalo para pausar los avisos en la página."
+  },
+  "showInfoHelp": {
+    "message": "Si se desactiva, la información adicional se puede consultar desde un botón pequeño. Los avisos y las notificaciones de revisiones incompletas siguen visibles."
+  },
+  "shownHost": {
+    "message": "URL mostrada"
+  },
+  "actualHost": {
+    "message": "Servidor de destino real"
+  },
+  "apparentTarget": {
+    "message": "Texto antes de @"
+  },
+  "suspiciousChars": {
+    "message": "Caracteres sospechosos"
+  },
+  "requestedAction": {
+    "message": "Acción solicitada"
+  },
+  "destinationHost": {
+    "message": "Destino"
+  },
+  "destinationType": {
+    "message": "Tipo de destino"
+  },
+  "candidateHost": {
+    "message": "Posible destino"
+  },
+  "thirdPartyContent": {
+    "message": "contenido de terceros"
+  },
+  "actionSecret": {
+    "message": "Introducir contraseña o código de verificación"
+  },
+  "actionAccount": {
+    "message": "Acción de cuenta o inicio de sesión"
+  },
+  "actionShared": {
+    "message": "Abrir contenido compartido"
+  },
+  "actionOpen": {
+    "message": "Abrir enlace"
+  },
+  "unknown": {
+    "message": "Revisión incompleta"
+  },
+  "occurrences": {
+    "message": "Apariciones: {n}"
+  },
+  "context": {
+    "message": "Texto cercano"
+  },
+  "linkText": {
+    "message": "Texto del enlace"
+  },
+  "otherFindings": {
+    "message": "Otros indicios: {n}"
+  },
+  "linkInput": {
+    "message": "Enlace sin analizar"
+  },
+  "privacyChecks": {
+    "message": "Revisa en este dispositivo el texto visible y los enlaces de los correos que abres en Gmail, además del correo que pegues o selecciones en archivos .eml o .txt."
+  },
+  "privacyExclusions": {
+    "message": "No verifica imágenes, códigos QR, archivos adjuntos ni páginas de destino."
+  },
+  "privacyStorage": {
+    "message": "La extensión no envía el contenido del correo fuera de este dispositivo ni lo guarda. Solo guarda los ajustes."
+  },
+  "privacyDisclaimer": {
+    "message": "La ausencia de advertencias no garantiza la seguridad ni la autenticidad del remitente."
+  },
+  "linkCount": {
+    "message": "Enlaces: {n}"
+  },
+  "groupLinkCount": {
+    "message": "Grupos: {groups} · enlaces: {links}"
+  },
+  "locateLink": {
+    "message": "Ir a la ubicación"
+  },
+  "linkChanged": {
+    "message": "El enlace cambió; revisando"
+  },
+  "warningMarker": {
+    "message": "Revisar"
+  },
+  "locateWarning": {
+    "message": "Ir a la ubicación"
+  },
+  "copyUnavailable": {
+    "message": "No se pudo copiar"
+  },
+  "markerTarget": {
+    "message": "Destino del enlace"
+  },
+  "showFullUrl": {
+    "message": "Mostrar URL completa"
+  },
+  "hideFullUrl": {
+    "message": "Ocultar URL completa"
+  },
+  "scanning": {
+    "message": "Revisando el correo…"
+  },
+  "sampleSubject": {
+    "message": "Mensaje de prueba ficticio; no es un correo real"
+  },
+  "sampleBody": {
+    "message": "Introduce tu contraseña de Google:"
+  },
+  "settingsError": {
+    "message": "No se pudieron leer o guardar los ajustes. Inténtalo de nuevo."
+  },
+  "fileNone": {
+    "message": "Ningún archivo seleccionado"
+  },
+  "fileSelected": {
+    "message": "Archivo seleccionado: {name}"
+  }
+}

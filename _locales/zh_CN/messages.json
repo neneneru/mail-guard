@@ -1,0 +1,317 @@
+{
+  "description": {
+    "message": "在本设备上检查 Gmail 邮件内容和链接，提示潜在钓鱼风险。不会将邮件发送到服务器。"
+  },
+  "active": {
+    "message": "检查已启用"
+  },
+  "paused": {
+    "message": "检查已暂停"
+  },
+  "enable": {
+    "message": "启用本地检查"
+  },
+  "options": {
+    "message": "设置"
+  },
+  "language": {
+    "message": "语言"
+  },
+  "auto": {
+    "message": "浏览器语言"
+  },
+  "showInfo": {
+    "message": "同时显示补充信息"
+  },
+  "save": {
+    "message": "保存设置"
+  },
+  "saved": {
+    "message": "已保存"
+  },
+  "privacy": {
+    "message": "隐私"
+  },
+  "coverage": {
+    "message": "检查范围为扩展程序可读取的邮件正文和链接。不验证邮件认证、图片、二维码、附件或目标网页。没有警告不代表安全。"
+  },
+  "scan": {
+    "message": "本地邮件检查"
+  },
+  "scanHelp": {
+    "message": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 MailContext Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。"
+  },
+  "choose": {
+    "message": "选择 .eml 或 .txt"
+  },
+  "analyze": {
+    "message": "检查邮件"
+  },
+  "clear": {
+    "message": "清除"
+  },
+  "sample": {
+    "message": "试用虚构示例"
+  },
+  "error": {
+    "message": "无法完成检查。请检查输入和大小限制。"
+  },
+  "noGmail": {
+    "message": "请打开 Gmail 检查邮件。"
+  },
+  "noMessages": {
+    "message": "请在 Gmail 中打开或展开邮件。若没有结果，请重新加载 Gmail。"
+  },
+  "messages": {
+    "message": "{n} 封已打开的邮件"
+  },
+  "details": {
+    "message": "查看详情"
+  },
+  "close": {
+    "message": "关闭"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "proceed": {
+    "message": "打开此链接"
+  },
+  "copy": {
+    "message": "复制网址"
+  },
+  "copied": {
+    "message": "已复制"
+  },
+  "confirm": {
+    "message": "打开前请确认"
+  },
+  "unsupported": {
+    "message": "扩展程序无法打开此类链接。"
+  },
+  "target": {
+    "message": "点击目标"
+  },
+  "candidate": {
+    "message": "网址内的跳转候选（未访问）"
+  },
+  "reason": {
+    "message": "显示原因"
+  },
+  "headers": {
+    "message": "邮件头信息"
+  },
+  "headerNote": {
+    "message": "此功能不保证邮件发件人的真实身份。"
+  },
+  "refresh": {
+    "message": "刷新"
+  },
+  "reset": {
+    "message": "重置设置"
+  },
+  "resetConfirm": {
+    "message": "要重置设置吗？本地检查和补充信息将启用，显示语言将恢复为浏览器语言。"
+  },
+  "input": {
+    "message": "在此粘贴邮件或邮件头…"
+  },
+  "NO_FINDINGS": {
+    "message": "未发现风险迹象"
+  },
+  "INFO": {
+    "message": "补充信息"
+  },
+  "CAUTION": {
+    "message": "建议检查"
+  },
+  "WARNING": {
+    "message": "操作前请确认"
+  },
+  "HIGH_RISK": {
+    "message": "发现高风险特征"
+  },
+  "reasonUgc": {
+    "message": "此服务允许他人创建内容。"
+  },
+  "reasonRedirect": {
+    "message": "最终目标未经验证。网址内的目标仅为候选。"
+  },
+  "reasonUnparsed": {
+    "message": "无法完整解析此链接。"
+  },
+  "reasonMismatch": {
+    "message": "显示的网址与实际链接指向不同的域名。"
+  },
+  "reasonUserinfo": {
+    "message": "@ 前的文字不是真正的目标主机。"
+  },
+  "reasonInvisible": {
+    "message": "链接中含有不可见字符或文字方向控制字符。"
+  },
+  "reasonAccount": {
+    "message": "账户或安全操作指向了第三方内容。"
+  },
+  "reasonSecret": {
+    "message": "邮件要求通过不适当的目标提交密码或验证码。"
+  },
+  "reasonSpoof": {
+    "message": "账户相关请求使用了掩饰真实主机的链接。"
+  },
+  "reasonLookalike": {
+    "message": "涉及敏感操作的链接主机与已知品牌相似。"
+  },
+  "reasonUnknown": {
+    "message": "目标与所请求账户操作之间的关系未知。"
+  },
+  "reasonAmbiguous": {
+    "message": "无法可靠地关联请求与链接。"
+  },
+  "reasonScheme": {
+    "message": "不支持此类链接。扩展不会执行跳转。"
+  },
+  "reasonForward": {
+    "message": "邮件头包含可能经过转发的迹象。仅凭转发不能判定有危险。"
+  },
+  "reasonReply": {
+    "message": "回复地址与发件人地址的域名不同。仅凭这一差异不能判定有危险。"
+  },
+  "name": {
+    "message": "MailContext Guard"
+  },
+  "partial": {
+    "message": "仅检查了部分输入。由于大小、格式或解析限制，部分内容未经检查。"
+  },
+  "unavailable": {
+    "message": "没有可读取的邮件正文。仍可能显示邮件头信息。"
+  },
+  "settingsHelp": {
+    "message": "在这里选择界面语言，以及扩展在 Gmail 中显示哪些提示。"
+  },
+  "languageHelp": {
+    "message": "更改扩展界面的显示语言。"
+  },
+  "enableHelp": {
+    "message": "自动检查您在 Gmail 中打开的邮件。关闭后将暂停页面内警告。"
+  },
+  "showInfoHelp": {
+    "message": "关闭时，可通过小按钮查看补充信息。警告和检查不完整的提示仍会显示。"
+  },
+  "shownHost": {
+    "message": "显示的网址"
+  },
+  "actualHost": {
+    "message": "实际链接目标的主机名"
+  },
+  "apparentTarget": {
+    "message": "@ 前的文本"
+  },
+  "suspiciousChars": {
+    "message": "可疑字符"
+  },
+  "requestedAction": {
+    "message": "请求的操作"
+  },
+  "destinationHost": {
+    "message": "目标地址"
+  },
+  "destinationType": {
+    "message": "目标类型"
+  },
+  "candidateHost": {
+    "message": "可能的目标"
+  },
+  "thirdPartyContent": {
+    "message": "第三方内容"
+  },
+  "actionSecret": {
+    "message": "输入密码或验证码"
+  },
+  "actionAccount": {
+    "message": "账户或登录操作"
+  },
+  "actionShared": {
+    "message": "打开共享内容"
+  },
+  "actionOpen": {
+    "message": "打开链接"
+  },
+  "unknown": {
+    "message": "检查不完整"
+  },
+  "occurrences": {
+    "message": "{n} 处"
+  },
+  "context": {
+    "message": "附近文本"
+  },
+  "linkText": {
+    "message": "链接文本"
+  },
+  "otherFindings": {
+    "message": "其他 {n} 项提示"
+  },
+  "linkInput": {
+    "message": "无法解析的链接"
+  },
+  "privacyChecks": {
+    "message": "在本设备上检查您在 Gmail 中打开邮件的可见正文和链接，以及您粘贴的邮件或选择的 .eml／.txt 文件内容。"
+  },
+  "privacyExclusions": {
+    "message": "不验证图片、二维码、附件或链接目标网页。"
+  },
+  "privacyStorage": {
+    "message": "扩展程序不会将邮件内容发送到设备外部，也不会保存邮件内容。仅保存设置。"
+  },
+  "privacyDisclaimer": {
+    "message": "没有警告并不保证邮件安全，也不保证发件人的真实身份。"
+  },
+  "linkCount": {
+    "message": "{n} 个链接"
+  },
+  "groupLinkCount": {
+    "message": "{groups} 组 · {links} 个链接"
+  },
+  "locateLink": {
+    "message": "跳转到对应位置"
+  },
+  "linkChanged": {
+    "message": "链接已更改，正在重新检查"
+  },
+  "warningMarker": {
+    "message": "请检查"
+  },
+  "locateWarning": {
+    "message": "跳转到对应位置"
+  },
+  "copyUnavailable": {
+    "message": "无法复制"
+  },
+  "markerTarget": {
+    "message": "链接目标"
+  },
+  "showFullUrl": {
+    "message": "显示完整网址"
+  },
+  "hideFullUrl": {
+    "message": "隐藏完整网址"
+  },
+  "scanning": {
+    "message": "正在检查邮件…"
+  },
+  "sampleSubject": {
+    "message": "虚构测试邮件，并非真实邮件"
+  },
+  "sampleBody": {
+    "message": "请输入您的 Google 密码："
+  },
+  "settingsError": {
+    "message": "无法读取或保存设置。请重试。"
+  },
+  "fileNone": {
+    "message": "未选择文件"
+  },
+  "fileSelected": {
+    "message": "已选择文件：{name}"
+  }
+}

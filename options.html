@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>MailContext Guard</title><link rel="stylesheet" href="ui-components.css"><link rel="stylesheet" href="style.css"></head>
+<body class="settings-page">
+<header class="topbar"><div class="brand"><img src="icons/icon-48.png" alt=""><span>MailContext Guard</span></div></header>
+<main class="page">
+ <div class="page-heading"><div><h1 data-i18n="options"></h1></div><div id="activeLine" class="statusline" role="status" hidden><span class="dot" aria-hidden="true"></span><span id="activeText"></span></div></div>
+ <div class="settings-layout">
+  <section id="preferences" class="preferences" aria-labelledby="preferencesTitle">
+   <h2 id="preferencesTitle" class="visually-hidden" data-i18n="options"></h2>
+   <p class="section-copy" data-i18n="settingsHelp"></p>
+   <div class="language-row"><label for="language"><strong data-i18n="language"></strong><span class="field-help" id="languageHelp" data-i18n="languageHelp"></span></label><select id="language" aria-describedby="languageHelp"></select></div>
+   <div class="settings-toggles">
+   <label class="setting-row" for="enabled"><span class="setting-copy"><strong id="enabledLabel" data-i18n="enable"></strong><small id="enableHelp" data-i18n="enableHelp"></small></span><input type="checkbox" role="switch" id="enabled" aria-labelledby="enabledLabel" aria-describedby="enableHelp"></label>
+   <label class="setting-row" for="showInfo"><span class="setting-copy"><strong id="showInfoLabel" data-i18n="showInfo"></strong><small id="showInfoHelp" data-i18n="showInfoHelp"></small></span><input type="checkbox" role="switch" id="showInfo" aria-labelledby="showInfoLabel" aria-describedby="showInfoHelp"></label>
+   </div>
+   <div class="actions settings-actions"><button id="save" class="btn btn-primary" data-i18n="save" type="button"></button><span id="saved" class="saved" role="status"></span><button id="reset" class="btn btn-ghost reset" data-i18n="reset" type="button"></button></div>
+  </section>
+  <aside class="secondary-tools">
+   <section id="privacy" class="privacy-section" aria-labelledby="privacyTitle"><h2 id="privacyTitle" data-i18n="privacy"></h2><div class="privacy-lines">
+    <p data-i18n="privacyChecks"></p>
+    <p data-i18n="privacyExclusions"></p>
+    <p data-i18n="privacyStorage"></p>
+    <p data-i18n="privacyDisclaimer"></p>
+   </div></section>
+   <section id="scanner" class="tool-section scanner-section" aria-labelledby="scannerTitle"><h2 id="scannerTitle" data-i18n="scan"></h2><div class="tool-body">
+    <p class="section-copy" data-i18n="scanHelp"></p>
+    <label for="raw" class="visually-hidden" data-i18n="input"></label><textarea id="raw" data-placeholder="input" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+    <div class="file-choice"><button id="chooseFile" class="btn" data-i18n="choose" type="button" aria-describedby="fileName"></button><span id="fileName" class="muted" role="status"></span><input id="file" type="file" accept=".eml,.txt,message/rfc822,text/plain" hidden></div>
+    <div class="actions"><button id="analyze" class="btn" data-i18n="analyze" type="button"></button><button id="sample" class="btn btn-ghost" data-i18n="sample" type="button"></button><button id="clear" class="btn btn-ghost" data-i18n="clear" type="button"></button></div>
+    <p id="scanStatus" class="muted" role="status"></p><div id="results" class="results" aria-live="polite"></div>
+   </div></section>
+  </aside>
+ </div>
+ <footer class="footer"><span>MailContext Guard · 1.0.7</span></footer>
+</main><script src="ui-base.js"></script><script src="options.js"></script></body></html>
