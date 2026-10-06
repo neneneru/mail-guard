@@ -2,6 +2,8 @@
 
 Gmail のメール本文とリンクを端末内で確認し、フィッシングの兆候を通知する Chrome 拡張機能です。
 
+[Chrome ウェブストア](https://chromewebstore.google.com/detail/mail-guard/gkjpggcmdlaimekmojaacipinmbpiglm)
+
 このリポジトリは、バージョン **1.0.7** の Chrome ウェブストア配布候補から、動作に必要なファイルとライセンスを公開したものです。ストアでの公開・審査完了を示すものではありません。
 
 ## 確認できること
