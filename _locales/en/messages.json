@@ -39,7 +39,7 @@
     "message": "Local message check"
   },
   "scanHelp": {
-    "message": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as MailContext Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB)."
+    "message": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as Mail Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB)."
   },
   "choose": {
     "message": "Choose .eml or .txt"
@@ -177,7 +177,7 @@
     "message": "Reply and sender domains differ. This difference alone does not indicate danger."
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "Only part of this input could be checked. Size, format or parsing limits left some content uninspected."
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "Selected file: {name}"
+  },
+  "reasonCount": {
+    "message": "Reasons: {n}"
+  },
+  "groupReasonCount": {
+    "message": "Links: {groups} · reasons: {reasons}"
+  },
+  "reasonSenderName": {
+    "message": "The displayed sender name or address does not match the sender address domain. This alone does not establish impersonation."
+  },
+  "reasonDeliveryDomain": {
+    "message": "The sending or forwarding domain differs from the sender domain. Legitimate forwarding can explain this."
+  },
+  "reasonSignerDomain": {
+    "message": "The reported signing domain differs from the sender domain. This alone does not establish impersonation."
+  },
+  "senderAddress": {
+    "message": "Sender address"
+  },
+  "senderName": {
+    "message": "Displayed sender name"
+  },
+  "senderDomain": {
+    "message": "Sender domain"
+  },
+  "deliveryDomain": {
+    "message": "Sending / forwarding domain"
+  },
+  "signerDomain": {
+    "message": "Reported signing domain"
+  },
+  "senderClaimsNote": {
+    "message": "Sender and authentication details are reported information, not independently verified. A familiar address does not verify the link."
+  },
+  "senderLinkWarning": {
+    "message": "Check links"
+  },
+  "senderInfo": {
+    "message": "Sender info"
+  },
+  "locateSender": {
+    "message": "Go to sender"
+  },
+  "senderContext": {
+    "message": "Sender and link context"
+  },
+  "privacySenderChecks": {
+    "message": "Also compares the displayed sender name/address and sending/signing domains from Gmail details you open, locally on this device."
   }
 }

@@ -39,7 +39,7 @@
     "message": "기기 내 메시지 검사"
   },
   "scanHelp": {
-    "message": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 MailContext Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB)."
+    "message": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 Mail Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB)."
   },
   "choose": {
     "message": ".eml 또는 .txt 파일 선택"
@@ -177,7 +177,7 @@
     "message": "회신 주소와 발신자 주소의 도메인이 다릅니다. 이 차이만으로 위험하다고 판단하지 않습니다."
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "입력 내용의 일부만 검사했습니다. 크기, 형식 또는 분석 한계로 검사하지 못한 내용이 있습니다."
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "선택된 파일: {name}"
+  },
+  "reasonCount": {
+    "message": "주의 사항 {n}개"
+  },
+  "groupReasonCount": {
+    "message": "링크 {groups}개 · 주의 사항 {reasons}개"
+  },
+  "reasonSenderName": {
+    "message": "표시된 발신자 이름 또는 주소가 발신자 주소의 도메인과 일치하지 않습니다. 이 차이만으로 사칭이라고 판단할 수는 없습니다."
+  },
+  "reasonDeliveryDomain": {
+    "message": "발송 또는 전달 도메인이 발신자 도메인과 다릅니다. 정상적인 메일 전달 과정에서도 발생할 수 있습니다."
+  },
+  "reasonSignerDomain": {
+    "message": "표시된 서명 도메인이 발신자 도메인과 다릅니다. 이 차이만으로 사칭이라고 판단할 수는 없습니다."
+  },
+  "senderAddress": {
+    "message": "발신자 주소"
+  },
+  "senderName": {
+    "message": "표시된 발신자 이름"
+  },
+  "senderDomain": {
+    "message": "발신자 도메인"
+  },
+  "deliveryDomain": {
+    "message": "발송 / 전달 도메인"
+  },
+  "signerDomain": {
+    "message": "표시된 서명 도메인"
+  },
+  "senderClaimsNote": {
+    "message": "발신자 및 인증 세부 정보는 제공된 내용이며, 별도로 검증되지 않았습니다. 익숙한 주소라고 해서 링크의 안전성이 확인되는 것은 아닙니다."
+  },
+  "senderLinkWarning": {
+    "message": "링크 확인"
+  },
+  "senderInfo": {
+    "message": "발신자 정보"
+  },
+  "locateSender": {
+    "message": "발신자로 이동"
+  },
+  "senderContext": {
+    "message": "발신자 및 링크 관련 정보"
+  },
+  "privacySenderChecks": {
+    "message": "표시된 발신자 이름·주소와 사용자가 Gmail에서 연 세부 정보의 발송·서명 도메인도 이 기기에서 로컬로 비교합니다."
   }
 }

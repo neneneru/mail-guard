@@ -39,7 +39,7 @@
     "message": "Vérification locale des e-mails"
   },
   "scanHelp": {
-    "message": "Collez les en-têtes ou un e-mail complet, ou choisissez un fichier .eml ou .txt, pour l’analyser selon les mêmes règles que les vérifications automatiques de MailContext Guard dans Gmail. Le contenu est traité uniquement sur votre appareil, sans être envoyé ailleurs ni enregistré (5 MB maximum)."
+    "message": "Collez les en-têtes ou un e-mail complet, ou choisissez un fichier .eml ou .txt, pour l’analyser selon les mêmes règles que les vérifications automatiques de Mail Guard dans Gmail. Le contenu est traité uniquement sur votre appareil, sans être envoyé ailleurs ni enregistré (5 MB maximum)."
   },
   "choose": {
     "message": "Choisir .eml ou .txt"
@@ -177,7 +177,7 @@
     "message": "Le domaine de l’adresse de réponse diffère de celui de l’expéditeur. Cette différence ne constitue pas à elle seule un signe de danger."
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "Seule une partie du contenu a été examinée en raison de limites de taille, de format ou d’analyse."
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "Fichier sélectionné : {name}"
+  },
+  "reasonCount": {
+    "message": "Motifs : {n}"
+  },
+  "groupReasonCount": {
+    "message": "Liens : {groups} · motifs : {reasons}"
+  },
+  "reasonSenderName": {
+    "message": "Le nom ou l’adresse affichés ne correspondent pas au domaine de l’adresse de l’expéditeur. Cela ne suffit pas à établir une usurpation d’identité."
+  },
+  "reasonDeliveryDomain": {
+    "message": "Le domaine d’envoi ou de transfert diffère de celui de l’expéditeur. Un transfert légitime peut expliquer cette différence."
+  },
+  "reasonSignerDomain": {
+    "message": "Le domaine de signature indiqué diffère de celui de l’expéditeur. Cela ne suffit pas à établir une usurpation d’identité."
+  },
+  "senderAddress": {
+    "message": "Adresse de l’expéditeur"
+  },
+  "senderName": {
+    "message": "Nom affiché de l’expéditeur"
+  },
+  "senderDomain": {
+    "message": "Domaine de l’expéditeur"
+  },
+  "deliveryDomain": {
+    "message": "Domaine d’envoi / de transfert"
+  },
+  "signerDomain": {
+    "message": "Domaine de signature indiqué"
+  },
+  "senderClaimsNote": {
+    "message": "Les détails sur l’expéditeur et l’authentification sont des informations déclarées, sans vérification indépendante. Une adresse familière ne garantit pas la sécurité du lien."
+  },
+  "senderLinkWarning": {
+    "message": "Vérifier les liens"
+  },
+  "senderInfo": {
+    "message": "Informations sur l’expéditeur"
+  },
+  "locateSender": {
+    "message": "Aller à l’expéditeur"
+  },
+  "senderContext": {
+    "message": "Contexte de l’expéditeur et des liens"
+  },
+  "privacySenderChecks": {
+    "message": "Compare aussi, localement sur cet appareil, le nom et l’adresse affichés de l’expéditeur avec les domaines d’envoi et de signature figurant dans les détails que vous ouvrez dans Gmail."
   }
 }

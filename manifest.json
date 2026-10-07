@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_name__",
-  "version": "1.0.7",
+  "version": "1.1.2",
   "minimum_chrome_version": "120",
   "description": "__MSG_description__",
   "default_locale": "en",
@@ -27,7 +27,7 @@
     }
   ],
   "action": {
-    "default_title": "MailContext Guard",
+    "default_title": "Mail Guard",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

@@ -1,9 +1,9 @@
-/* MailContext Guard 1.0.7 — bundled locally; no remote dependencies. */
-/* MailContext Guard. Pure, bounded local analysis; no network or persistent state. */
+/* Mail Guard 1.1.2 — bundled locally; no remote dependencies. */
+/* Mail Guard. Pure, bounded local analysis; no network or persistent state. */
 (() => {
   'use strict';
   const M = globalThis.MCG = globalThis.MCG || Object.create(null);
-  M.VERSION = '1.0.7';
+  M.VERSION = '1.1.2';
   M.LIMIT = Object.freeze({url:16384, links:500, context:1000, text:262144, nodes:20000, header:262144, fields:2048, field:32768, raw:5000000, mimeParts:128, depth:10});
   M.LEVELS = ['NO_FINDINGS','INFO','CAUTION','WARNING','HIGH_RISK'];
   M.maxLevel = (...x) => M.LEVELS[Math.max(0,...x.map(v=>M.LEVELS.indexOf(v)))];
@@ -42,7 +42,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privacy",
     "coverage": "Checks cover the message text and links available to the extension. Email authentication, images, QR codes, attachments, and destination pages are not verified. A missing warning is not a safety guarantee.",
     "scan": "Local message check",
-    "scanHelp": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as MailContext Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB).",
+    "scanHelp": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as Mail Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB).",
     "choose": "Choose .eml or .txt",
     "analyze": "Check message",
     "clear": "Clear",
@@ -88,7 +88,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Unsupported link type. No navigation is performed by the extension.",
     "reasonForward": "Headers contain signs consistent with forwarding. Forwarding alone does not indicate danger.",
     "reasonReply": "Reply and sender domains differ. This difference alone does not indicate danger.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Only part of this input could be checked. Size, format or parsing limits left some content uninspected.",
     "unavailable": "There is no readable message body to check. Header details may still be available.",
     "settingsHelp": "Choose the display language and what the extension shows while checking Gmail.",
@@ -133,7 +133,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Enter your Google password:",
     "settingsError": "Unable to read or save settings. Try again.",
     "fileNone": "No file selected",
-    "fileSelected": "Selected file: {name}"
+    "fileSelected": "Selected file: {name}",
+    "reasonCount": "Reasons: {n}",
+    "groupReasonCount": "Links: {groups} · reasons: {reasons}",
+    "reasonSenderName": "The displayed sender name or address does not match the sender address domain. This alone does not establish impersonation.",
+    "reasonDeliveryDomain": "The sending or forwarding domain differs from the sender domain. Legitimate forwarding can explain this.",
+    "reasonSignerDomain": "The reported signing domain differs from the sender domain. This alone does not establish impersonation.",
+    "senderAddress": "Sender address",
+    "senderName": "Displayed sender name",
+    "senderDomain": "Sender domain",
+    "deliveryDomain": "Sending / forwarding domain",
+    "signerDomain": "Reported signing domain",
+    "senderClaimsNote": "Sender and authentication details are reported information, not independently verified. A familiar address does not verify the link.",
+    "senderLinkWarning": "Check links",
+    "senderInfo": "Sender info",
+    "locateSender": "Go to sender",
+    "senderContext": "Sender and link context",
+    "privacySenderChecks": "Also compares the displayed sender name/address and sending/signing domains from Gmail details you open, locally on this device."
   },
   "ja": {
     "description": "Gmailの本文とリンクを端末内で確認し、フィッシングの兆候を通知します。メール内容をサーバーへ送信しません。",
@@ -195,7 +211,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "未対応のリンク形式です。拡張機能はこのリンクを開きません。",
     "reasonForward": "ヘッダーに転送の可能性を示す情報があります。転送だけで危険とは判断できません。",
     "reasonReply": "返信先と差出人のドメインが異なります。この違いだけで危険とは判断できません。",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "一部のみ確認しました。サイズ・形式・解析上限などにより、未確認の内容が残っています。",
     "unavailable": "確認できるメール本文がありません。ヘッダー情報は参照できる場合があります。",
     "settingsHelp": "表示言語と、Gmailでの自動チェックや表示する情報を設定します。",
@@ -240,7 +256,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Googleのパスワードを入力してください：",
     "settingsError": "設定の読み込み、または保存に失敗しました。もう一度お試しください。",
     "fileNone": "ファイルは選択されていません",
-    "fileSelected": "選択したファイル：{name}"
+    "fileSelected": "選択したファイル：{name}",
+    "reasonCount": "注意点 {n} 件",
+    "groupReasonCount": "リンク {groups} 件・注意点 {reasons} 件",
+    "reasonSenderName": "表示された送信者名やアドレスが、送信者アドレスのドメインと一致しません。この違いだけでなりすましとは判断できません。",
+    "reasonDeliveryDomain": "送信経路や転送元のドメインが、送信者のドメインと異なります。正規の転送でも起こる場合があります。",
+    "reasonSignerDomain": "表示上の署名ドメインが、送信者のドメインと異なります。この違いだけでなりすましとは判断できません。",
+    "senderAddress": "送信者アドレス",
+    "senderName": "表示された送信者名",
+    "senderDomain": "送信者ドメイン",
+    "deliveryDomain": "送信経路／転送ドメイン",
+    "signerDomain": "表示上の署名ドメイン",
+    "senderClaimsNote": "送信者や認証の詳細は記載された情報であり、独自に検証したものではありません。見慣れたアドレスでも、リンクの安全性は確認できません。",
+    "senderLinkWarning": "リンクを確認",
+    "senderInfo": "送信者情報",
+    "locateSender": "送信者の位置へ",
+    "senderContext": "送信者とリンクの関連情報",
+    "privacySenderChecks": "Gmail画面の送信者名・アドレスと、利用者が開いた詳細欄の送信元・署名元ドメインも、この端末内で比較します。"
   },
   "zh_CN": {
     "description": "在本设备上检查 Gmail 邮件内容和链接，提示潜在钓鱼风险。不会将邮件发送到服务器。",
@@ -256,7 +288,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "隐私",
     "coverage": "检查范围为扩展程序可读取的邮件正文和链接。不验证邮件认证、图片、二维码、附件或目标网页。没有警告不代表安全。",
     "scan": "本地邮件检查",
-    "scanHelp": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 MailContext Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。",
+    "scanHelp": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 Mail Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。",
     "choose": "选择 .eml 或 .txt",
     "analyze": "检查邮件",
     "clear": "清除",
@@ -302,7 +334,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "不支持此类链接。扩展不会执行跳转。",
     "reasonForward": "邮件头包含可能经过转发的迹象。仅凭转发不能判定有危险。",
     "reasonReply": "回复地址与发件人地址的域名不同。仅凭这一差异不能判定有危险。",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "仅检查了部分输入。由于大小、格式或解析限制，部分内容未经检查。",
     "unavailable": "没有可读取的邮件正文。仍可能显示邮件头信息。",
     "settingsHelp": "在这里选择界面语言，以及扩展在 Gmail 中显示哪些提示。",
@@ -347,7 +379,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "请输入您的 Google 密码：",
     "settingsError": "无法读取或保存设置。请重试。",
     "fileNone": "未选择文件",
-    "fileSelected": "已选择文件：{name}"
+    "fileSelected": "已选择文件：{name}",
+    "reasonCount": "{n} 个注意事项",
+    "groupReasonCount": "{groups} 个链接 · {reasons} 个注意事项",
+    "reasonSenderName": "显示的发件人名称或地址与发件人地址的域名不一致。仅凭这一点无法判定是否存在冒充。",
+    "reasonDeliveryDomain": "发送或转发域名与发件人域名不同。正常转发也可能出现这种情况。",
+    "reasonSignerDomain": "所显示的签名域名与发件人域名不同。仅凭这一点无法判定是否存在冒充。",
+    "senderAddress": "发件人地址",
+    "senderName": "显示的发件人名称",
+    "senderDomain": "发件人域名",
+    "deliveryDomain": "发送／转发域名",
+    "signerDomain": "所显示的签名域名",
+    "senderClaimsNote": "发件人和身份验证详情来自所提供的信息，未经独立验证。熟悉的地址并不能证明链接安全。",
+    "senderLinkWarning": "检查链接",
+    "senderInfo": "发件人信息",
+    "locateSender": "跳转到发件人",
+    "senderContext": "发件人和链接相关信息",
+    "privacySenderChecks": "还会在此设备上比较 Gmail 显示的发件人名称／地址，以及您打开的详情中的发送／签名域名。"
   },
   "es": {
     "description": "Alertas locales de suplantación de identidad en Gmail. Revisa texto y enlaces sin enviar tus correos a un servidor.",
@@ -363,7 +411,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privacidad",
     "coverage": "Se revisan el texto y los enlaces del correo que la extensión puede leer. No se verifican la autenticación del correo, las imágenes, los códigos QR, los adjuntos ni las páginas de destino. La ausencia de advertencias no garantiza la seguridad.",
     "scan": "Revisión local de correo",
-    "scanHelp": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de MailContext Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB).",
+    "scanHelp": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de Mail Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB).",
     "choose": "Elegir .eml o .txt",
     "analyze": "Revisar correo",
     "clear": "Borrar",
@@ -409,7 +457,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Tipo de enlace no compatible. La extensión no abre este enlace.",
     "reasonForward": "Las cabeceras contienen indicios de reenvío. El reenvío por sí solo no indica peligro.",
     "reasonReply": "Los dominios de respuesta y del remitente son distintos. Esta diferencia por sí sola no indica peligro.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Solo se pudo revisar parte del contenido debido a límites de tamaño, formato o análisis.",
     "unavailable": "No hay un cuerpo de mensaje legible. Puede haber información de cabeceras.",
     "settingsHelp": "Elige el idioma y qué información muestra la extensión al revisar Gmail.",
@@ -454,7 +502,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Introduce tu contraseña de Google:",
     "settingsError": "No se pudieron leer o guardar los ajustes. Inténtalo de nuevo.",
     "fileNone": "Ningún archivo seleccionado",
-    "fileSelected": "Archivo seleccionado: {name}"
+    "fileSelected": "Archivo seleccionado: {name}",
+    "reasonCount": "Motivos: {n}",
+    "groupReasonCount": "Enlaces: {groups} · motivos: {reasons}",
+    "reasonSenderName": "El nombre o la dirección que se muestran no coinciden con el dominio de la dirección del remitente. Esto por sí solo no demuestra una suplantación.",
+    "reasonDeliveryDomain": "El dominio de envío o reenvío difiere del dominio del remitente. Un reenvío legítimo puede explicar esta diferencia.",
+    "reasonSignerDomain": "El dominio de firma indicado difiere del dominio del remitente. Esto por sí solo no demuestra una suplantación.",
+    "senderAddress": "Dirección del remitente",
+    "senderName": "Nombre mostrado del remitente",
+    "senderDomain": "Dominio del remitente",
+    "deliveryDomain": "Dominio de envío / reenvío",
+    "signerDomain": "Dominio de firma indicado",
+    "senderClaimsNote": "Los datos del remitente y de autenticación son información indicada, sin verificación independiente. Una dirección conocida no verifica el enlace.",
+    "senderLinkWarning": "Revisar enlaces",
+    "senderInfo": "Información del remitente",
+    "locateSender": "Ir al remitente",
+    "senderContext": "Contexto del remitente y los enlaces",
+    "privacySenderChecks": "También compara localmente, en este dispositivo, el nombre y la dirección mostrados del remitente con los dominios de envío y firma de los detalles que abres en Gmail."
   },
   "ar": {
     "description": "تحذيرات تصيد محلية لـ Gmail. فحص نص الرسالة وروابطها دون إرسال بريدك إلى خادم.",
@@ -470,7 +534,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "الخصوصية",
     "coverage": "يشمل الفحص نص الرسالة وروابطها التي تستطيع الإضافة قراءتها. لا يتم التحقق من مصادقة البريد أو الصور أو رموز QR أو المرفقات أو صفحات الوجهة. غياب التحذير لا يضمن الأمان.",
     "scan": "فحص رسالة محليًا",
-    "scanHelp": "الصق رؤوس البريد الإلكتروني أو الرسالة كاملة، أو اختر ملف ‎.eml أو ‎.txt لتحليله باستخدام القواعد نفسها التي يستخدمها MailContext Guard للفحص التلقائي في Gmail. يُعالَج المحتوى على جهازك فقط، ولا يُرسَل إلى أي جهة خارجية ولا يُحفَظ (بحد أقصى 5 MB).",
+    "scanHelp": "الصق رؤوس البريد الإلكتروني أو الرسالة كاملة، أو اختر ملف ‎.eml أو ‎.txt لتحليله باستخدام القواعد نفسها التي يستخدمها Mail Guard للفحص التلقائي في Gmail. يُعالَج المحتوى على جهازك فقط، ولا يُرسَل إلى أي جهة خارجية ولا يُحفَظ (بحد أقصى 5 MB).",
     "choose": "اختر ‎.eml أو ‎.txt",
     "analyze": "فحص الرسالة",
     "clear": "مسح",
@@ -516,7 +580,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "نوع رابط غير مدعوم. لن تفتح الإضافة هذا الرابط.",
     "reasonForward": "تحتوي رؤوس الرسالة على علامات تشير إلى إعادة توجيهها. إعادة التوجيه وحدها لا تدل على خطر.",
     "reasonReply": "يختلف نطاق عنوان الرد عن نطاق المرسل. هذا الاختلاف وحده لا يدل على خطر.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "تم فحص جزء فقط من المحتوى بسبب قيود الحجم أو التنسيق أو التحليل.",
     "unavailable": "لا يوجد نص رسالة قابل للقراءة. قد تتوفر معلومات الرؤوس.",
     "settingsHelp": "اختر لغة العرض وما الذي تعرضه الإضافة أثناء فحص Gmail.",
@@ -561,7 +625,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "أدخل كلمة المرور لحسابك في Google:",
     "settingsError": "تعذرت قراءة الإعدادات أو حفظها. حاول مرة أخرى.",
     "fileNone": "لم يتم اختيار ملف",
-    "fileSelected": "الملف المحدد: {name}"
+    "fileSelected": "الملف المحدد: {name}",
+    "reasonCount": "الأسباب: {n}",
+    "groupReasonCount": "الروابط: {groups} · الأسباب: {reasons}",
+    "reasonSenderName": "لا يتطابق اسم المرسل أو عنوانه المعروض مع نطاق عنوان المرسل. هذا وحده لا يثبت انتحال الهوية.",
+    "reasonDeliveryDomain": "يختلف نطاق الإرسال أو إعادة التوجيه عن نطاق المرسل. قد يكون السبب إعادة توجيه مشروعة.",
+    "reasonSignerDomain": "يختلف نطاق التوقيع المذكور عن نطاق المرسل. هذا وحده لا يثبت انتحال الهوية.",
+    "senderAddress": "عنوان المرسل",
+    "senderName": "اسم المرسل المعروض",
+    "senderDomain": "نطاق المرسل",
+    "deliveryDomain": "نطاق الإرسال / إعادة التوجيه",
+    "signerDomain": "نطاق التوقيع المذكور",
+    "senderClaimsNote": "تفاصيل المرسل والمصادقة هي معلومات مذكورة لم يتم التحقق منها بشكل مستقل. العنوان المألوف لا يثبت سلامة الرابط.",
+    "senderLinkWarning": "تحقق من الروابط",
+    "senderInfo": "معلومات المرسل",
+    "locateSender": "الانتقال إلى المرسل",
+    "senderContext": "سياق المرسل والروابط",
+    "privacySenderChecks": "يقارن أيضًا على هذا الجهاز اسم المرسل وعنوانه المعروضين بنطاقات الإرسال والتوقيع الواردة في تفاصيل Gmail التي تفتحها."
   },
   "pt_BR": {
     "description": "Alertas locais de phishing no Gmail. Verifique o texto e os links sem enviar seus e-mails a um servidor.",
@@ -577,7 +657,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privacidade",
     "coverage": "A verificação abrange o texto e os links do e-mail que a extensão pode ler. Autenticação do e-mail, imagens, códigos QR, anexos e páginas de destino não são verificados. A ausência de avisos não garante segurança.",
     "scan": "Verificação local de e-mail",
-    "scanHelp": "Cole os cabeçalhos ou um e-mail completo, ou escolha um arquivo .eml ou .txt, para analisá-lo com as mesmas regras das verificações automáticas do MailContext Guard no Gmail. O conteúdo é processado apenas no seu dispositivo, sem ser enviado para fora ou salvo (até 5 MB).",
+    "scanHelp": "Cole os cabeçalhos ou um e-mail completo, ou escolha um arquivo .eml ou .txt, para analisá-lo com as mesmas regras das verificações automáticas do Mail Guard no Gmail. O conteúdo é processado apenas no seu dispositivo, sem ser enviado para fora ou salvo (até 5 MB).",
     "choose": "Escolher .eml ou .txt",
     "analyze": "Verificar e-mail",
     "clear": "Limpar",
@@ -623,7 +703,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Tipo de link não compatível. A extensão não abre este link.",
     "reasonForward": "Os cabeçalhos contêm indícios de encaminhamento. O encaminhamento, por si só, não indica perigo.",
     "reasonReply": "Os domínios do endereço de resposta e do remetente são diferentes. Essa diferença, por si só, não indica perigo.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Apenas parte do conteúdo foi verificada devido a limites de tamanho, formato ou análise.",
     "unavailable": "Não há corpo de mensagem legível. Informações dos cabeçalhos podem estar disponíveis.",
     "settingsHelp": "Escolha o idioma e o que a extensão mostra ao verificar o Gmail.",
@@ -668,7 +748,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Digite sua senha do Google:",
     "settingsError": "Não foi possível ler ou salvar as configurações. Tente novamente.",
     "fileNone": "Nenhum arquivo selecionado",
-    "fileSelected": "Arquivo selecionado: {name}"
+    "fileSelected": "Arquivo selecionado: {name}",
+    "reasonCount": "Motivos: {n}",
+    "groupReasonCount": "Links: {groups} · motivos: {reasons}",
+    "reasonSenderName": "O nome ou endereço exibido do remetente não corresponde ao domínio do endereço do remetente. Isso, por si só, não comprova falsificação de identidade.",
+    "reasonDeliveryDomain": "O domínio de envio ou encaminhamento difere do domínio do remetente. Um encaminhamento legítimo pode explicar essa diferença.",
+    "reasonSignerDomain": "O domínio de assinatura informado difere do domínio do remetente. Isso, por si só, não comprova falsificação de identidade.",
+    "senderAddress": "Endereço do remetente",
+    "senderName": "Nome exibido do remetente",
+    "senderDomain": "Domínio do remetente",
+    "deliveryDomain": "Domínio de envio / encaminhamento",
+    "signerDomain": "Domínio de assinatura informado",
+    "senderClaimsNote": "Os detalhes do remetente e da autenticação são informações declaradas, sem verificação independente. Um endereço conhecido não comprova a segurança do link.",
+    "senderLinkWarning": "Verificar links",
+    "senderInfo": "Informações do remetente",
+    "locateSender": "Ir ao remetente",
+    "senderContext": "Contexto do remetente e dos links",
+    "privacySenderChecks": "Também compara, localmente neste dispositivo, o nome e o endereço exibidos do remetente com os domínios de envio e assinatura dos detalhes que você abre no Gmail."
   },
   "fr": {
     "description": "Alertes de hameçonnage locales pour Gmail. Vérifiez le texte et les liens sans envoyer vos e-mails à un serveur.",
@@ -684,7 +780,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Confidentialité",
     "coverage": "La vérification porte sur le texte et les liens du message que l’extension peut lire. L’authentification des e-mails, les images, les codes QR, les pièces jointes et les pages de destination ne sont pas vérifiés. L’absence d’avertissement ne garantit pas la sécurité.",
     "scan": "Vérification locale des e-mails",
-    "scanHelp": "Collez les en-têtes ou un e-mail complet, ou choisissez un fichier .eml ou .txt, pour l’analyser selon les mêmes règles que les vérifications automatiques de MailContext Guard dans Gmail. Le contenu est traité uniquement sur votre appareil, sans être envoyé ailleurs ni enregistré (5 MB maximum).",
+    "scanHelp": "Collez les en-têtes ou un e-mail complet, ou choisissez un fichier .eml ou .txt, pour l’analyser selon les mêmes règles que les vérifications automatiques de Mail Guard dans Gmail. Le contenu est traité uniquement sur votre appareil, sans être envoyé ailleurs ni enregistré (5 MB maximum).",
     "choose": "Choisir .eml ou .txt",
     "analyze": "Vérifier le message",
     "clear": "Effacer",
@@ -730,7 +826,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Type de lien non pris en charge. L’extension n’ouvre pas ce lien.",
     "reasonForward": "Les en-têtes contiennent des indices de transfert du message. Un transfert ne constitue pas à lui seul un signe de danger.",
     "reasonReply": "Le domaine de l’adresse de réponse diffère de celui de l’expéditeur. Cette différence ne constitue pas à elle seule un signe de danger.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Seule une partie du contenu a été examinée en raison de limites de taille, de format ou d’analyse.",
     "unavailable": "Aucun corps de message lisible. Des informations d’en-tête peuvent être disponibles.",
     "settingsHelp": "Choisissez la langue et ce que l’extension affiche lors des vérifications Gmail.",
@@ -775,7 +871,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Saisissez votre mot de passe Google :",
     "settingsError": "Impossible de lire ou d’enregistrer les paramètres. Réessayez.",
     "fileNone": "Aucun fichier sélectionné",
-    "fileSelected": "Fichier sélectionné : {name}"
+    "fileSelected": "Fichier sélectionné : {name}",
+    "reasonCount": "Motifs : {n}",
+    "groupReasonCount": "Liens : {groups} · motifs : {reasons}",
+    "reasonSenderName": "Le nom ou l’adresse affichés ne correspondent pas au domaine de l’adresse de l’expéditeur. Cela ne suffit pas à établir une usurpation d’identité.",
+    "reasonDeliveryDomain": "Le domaine d’envoi ou de transfert diffère de celui de l’expéditeur. Un transfert légitime peut expliquer cette différence.",
+    "reasonSignerDomain": "Le domaine de signature indiqué diffère de celui de l’expéditeur. Cela ne suffit pas à établir une usurpation d’identité.",
+    "senderAddress": "Adresse de l’expéditeur",
+    "senderName": "Nom affiché de l’expéditeur",
+    "senderDomain": "Domaine de l’expéditeur",
+    "deliveryDomain": "Domaine d’envoi / de transfert",
+    "signerDomain": "Domaine de signature indiqué",
+    "senderClaimsNote": "Les détails sur l’expéditeur et l’authentification sont des informations déclarées, sans vérification indépendante. Une adresse familière ne garantit pas la sécurité du lien.",
+    "senderLinkWarning": "Vérifier les liens",
+    "senderInfo": "Informations sur l’expéditeur",
+    "locateSender": "Aller à l’expéditeur",
+    "senderContext": "Contexte de l’expéditeur et des liens",
+    "privacySenderChecks": "Compare aussi, localement sur cet appareil, le nom et l’adresse affichés de l’expéditeur avec les domaines d’envoi et de signature figurant dans les détails que vous ouvrez dans Gmail."
   },
   "ru": {
     "description": "Локальные предупреждения о фишинге в Gmail. Проверка текста и ссылок без отправки писем на сервер.",
@@ -791,7 +903,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Конфиденциальность",
     "coverage": "Проверяются текст и ссылки письма, доступные расширению. Аутентификация письма, изображения, QR-коды, вложения и страницы по ссылкам не проверяются. Отсутствие предупреждений не гарантирует безопасность.",
     "scan": "Локальная проверка письма",
-    "scanHelp": "Вставьте заголовки или письмо целиком либо выберите файл .eml или .txt для анализа по тем же правилам, что и при автоматической проверке MailContext Guard в Gmail. Содержимое обрабатывается только на вашем устройстве, никуда не отправляется и не сохраняется (до 5 MB).",
+    "scanHelp": "Вставьте заголовки или письмо целиком либо выберите файл .eml или .txt для анализа по тем же правилам, что и при автоматической проверке Mail Guard в Gmail. Содержимое обрабатывается только на вашем устройстве, никуда не отправляется и не сохраняется (до 5 MB).",
     "choose": "Выбрать .eml или .txt",
     "analyze": "Проверить письмо",
     "clear": "Очистить",
@@ -837,7 +949,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Неподдерживаемый тип ссылки. Расширение не открывает её.",
     "reasonForward": "В заголовках есть признаки пересылки. Пересылка сама по себе не указывает на опасность.",
     "reasonReply": "Домен адреса для ответа отличается от домена отправителя. Само по себе это различие не указывает на опасность.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Проверена только часть содержимого из-за ограничений размера, формата или анализа.",
     "unavailable": "Нет читаемого текста письма. Сведения о заголовках могут быть доступны.",
     "settingsHelp": "Выберите язык интерфейса и то, какие уведомления расширение показывает в Gmail.",
@@ -882,7 +994,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Введите пароль от аккаунта Google:",
     "settingsError": "Не удалось прочитать или сохранить настройки. Повторите попытку.",
     "fileNone": "Файл не выбран",
-    "fileSelected": "Выбранный файл: {name}"
+    "fileSelected": "Выбранный файл: {name}",
+    "reasonCount": "Причин: {n}",
+    "groupReasonCount": "Ссылок: {groups} · причин: {reasons}",
+    "reasonSenderName": "Отображаемое имя или адрес отправителя не соответствует домену адреса отправителя. Само по себе это не доказывает подмену личности.",
+    "reasonDeliveryDomain": "Домен отправки или пересылки отличается от домена отправителя. Это может быть связано с обычной пересылкой.",
+    "reasonSignerDomain": "Указанный домен подписи отличается от домена отправителя. Само по себе это не доказывает подмену личности.",
+    "senderAddress": "Адрес отправителя",
+    "senderName": "Отображаемое имя отправителя",
+    "senderDomain": "Домен отправителя",
+    "deliveryDomain": "Домен отправки / пересылки",
+    "signerDomain": "Указанный домен подписи",
+    "senderClaimsNote": "Сведения об отправителе и аутентификации приведены по имеющимся данным и не проверены независимо. Знакомый адрес не подтверждает безопасность ссылки.",
+    "senderLinkWarning": "Проверить ссылки",
+    "senderInfo": "Сведения об отправителе",
+    "locateSender": "Перейти к отправителю",
+    "senderContext": "Контекст отправителя и ссылок",
+    "privacySenderChecks": "Также локально на этом устройстве сравнивает отображаемые имя и адрес отправителя с доменами отправки и подписи из подробных сведений, которые вы открываете в Gmail."
   },
   "de": {
     "description": "Lokale Phishing-Warnungen für Gmail. Prüft Text und Links, ohne Ihre E-Mails an einen Server zu senden.",
@@ -898,7 +1026,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Datenschutz",
     "coverage": "Geprüft werden der Nachrichtentext und die Links, die die Erweiterung lesen kann. E-Mail-Authentifizierung, Bilder, QR-Codes, Anhänge und Zielseiten werden nicht verifiziert. Das Fehlen einer Warnung garantiert keine Sicherheit.",
     "scan": "Lokale E-Mail-Prüfung",
-    "scanHelp": "Fügen Sie E-Mail-Header oder eine vollständige E-Mail ein oder wählen Sie eine .eml- oder .txt-Datei, um sie nach denselben Regeln wie bei den automatischen Prüfungen von MailContext Guard in Gmail zu analysieren. Der Inhalt wird nur auf Ihrem Gerät verarbeitet, nicht nach außen gesendet und nicht gespeichert (bis 5 MB).",
+    "scanHelp": "Fügen Sie E-Mail-Header oder eine vollständige E-Mail ein oder wählen Sie eine .eml- oder .txt-Datei, um sie nach denselben Regeln wie bei den automatischen Prüfungen von Mail Guard in Gmail zu analysieren. Der Inhalt wird nur auf Ihrem Gerät verarbeitet, nicht nach außen gesendet und nicht gespeichert (bis 5 MB).",
     "choose": ".eml oder .txt auswählen",
     "analyze": "E-Mail prüfen",
     "clear": "Löschen",
@@ -944,7 +1072,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Nicht unterstützter Linktyp. Die Erweiterung öffnet diesen Link nicht.",
     "reasonForward": "Die Header enthalten Hinweise auf eine Weiterleitung. Eine Weiterleitung allein weist nicht auf eine Gefahr hin.",
     "reasonReply": "Die Domain der Antwortadresse unterscheidet sich von der Absenderdomain. Dieser Unterschied allein weist nicht auf eine Gefahr hin.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Nur ein Teil konnte wegen Größen-, Format- oder Analysegrenzen geprüft werden.",
     "unavailable": "Kein lesbarer Nachrichtentext vorhanden. Header-Informationen können verfügbar sein.",
     "settingsHelp": "Wählen Sie die Anzeigesprache und welche Hinweise die Erweiterung bei Gmail zeigt.",
@@ -989,7 +1117,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Geben Sie Ihr Google-Passwort ein:",
     "settingsError": "Die Einstellungen konnten nicht gelesen oder gespeichert werden. Versuchen Sie es erneut.",
     "fileNone": "Keine Datei ausgewählt",
-    "fileSelected": "Ausgewählte Datei: {name}"
+    "fileSelected": "Ausgewählte Datei: {name}",
+    "reasonCount": "Hinweise: {n}",
+    "groupReasonCount": "Links: {groups} · Hinweise: {reasons}",
+    "reasonSenderName": "Der angezeigte Absendername oder die angezeigte Adresse passt nicht zur Domain der Absenderadresse. Das allein belegt keine Identitätstäuschung.",
+    "reasonDeliveryDomain": "Die Versand- oder Weiterleitungsdomain weicht von der Absenderdomain ab. Eine legitime Weiterleitung kann dies erklären.",
+    "reasonSignerDomain": "Die angegebene Signaturdomain weicht von der Absenderdomain ab. Das allein belegt keine Identitätstäuschung.",
+    "senderAddress": "Absenderadresse",
+    "senderName": "Angezeigter Absendername",
+    "senderDomain": "Absenderdomain",
+    "deliveryDomain": "Versand- / Weiterleitungsdomain",
+    "signerDomain": "Angegebene Signaturdomain",
+    "senderClaimsNote": "Die Angaben zu Absender und Authentifizierung wurden nicht unabhängig überprüft. Eine vertraute Adresse bestätigt nicht die Sicherheit des Links.",
+    "senderLinkWarning": "Links prüfen",
+    "senderInfo": "Absenderinfos",
+    "locateSender": "Zum Absender",
+    "senderContext": "Kontext zu Absender und Links",
+    "privacySenderChecks": "Vergleicht außerdem lokal auf diesem Gerät den angezeigten Absendernamen und die Absenderadresse mit den Versand- und Signaturdomains aus den von Ihnen geöffneten Gmail-Details."
   },
   "id": {
     "description": "Peringatan phishing lokal untuk Gmail. Periksa teks dan tautan tanpa mengirim email ke server.",
@@ -1005,7 +1149,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privasi",
     "coverage": "Pemeriksaan mencakup teks dan tautan email yang dapat dibaca oleh ekstensi. Autentikasi email, gambar, kode QR, lampiran, dan halaman tujuan tidak diverifikasi. Tidak adanya peringatan bukan jaminan keamanan.",
     "scan": "Pemeriksaan email lokal",
-    "scanHelp": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis MailContext Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB).",
+    "scanHelp": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis Mail Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB).",
     "choose": "Pilih .eml atau .txt",
     "analyze": "Periksa email",
     "clear": "Hapus",
@@ -1051,7 +1195,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Jenis tautan tidak didukung. Ekstensi tidak akan membukanya.",
     "reasonForward": "Header menunjukkan tanda penerusan email. Penerusan saja tidak menunjukkan bahaya.",
     "reasonReply": "Domain alamat balasan dan pengirim berbeda. Perbedaan ini saja tidak menunjukkan bahaya.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Hanya sebagian isi yang diperiksa karena batas ukuran, format, atau penguraian.",
     "unavailable": "Tidak ada isi pesan yang dapat dibaca. Informasi header mungkin tersedia.",
     "settingsHelp": "Pilih bahasa tampilan dan informasi apa yang ditampilkan ekstensi saat memeriksa Gmail.",
@@ -1096,7 +1240,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Masukkan kata sandi akun Google Anda:",
     "settingsError": "Tidak dapat membaca atau menyimpan setelan. Coba lagi.",
     "fileNone": "Belum ada file yang dipilih",
-    "fileSelected": "File yang dipilih: {name}"
+    "fileSelected": "File yang dipilih: {name}",
+    "reasonCount": "Alasan: {n}",
+    "groupReasonCount": "Tautan: {groups} · alasan: {reasons}",
+    "reasonSenderName": "Nama atau alamat pengirim yang ditampilkan tidak sesuai dengan domain alamat pengirim. Hal ini saja tidak membuktikan pemalsuan identitas.",
+    "reasonDeliveryDomain": "Domain pengiriman atau penerusan berbeda dari domain pengirim. Penerusan yang sah dapat menjelaskan perbedaan ini.",
+    "reasonSignerDomain": "Domain tanda tangan yang tercantum berbeda dari domain pengirim. Hal ini saja tidak membuktikan pemalsuan identitas.",
+    "senderAddress": "Alamat pengirim",
+    "senderName": "Nama pengirim yang ditampilkan",
+    "senderDomain": "Domain pengirim",
+    "deliveryDomain": "Domain pengiriman / penerusan",
+    "signerDomain": "Domain tanda tangan yang tercantum",
+    "senderClaimsNote": "Detail pengirim dan autentikasi merupakan informasi yang tercantum, tanpa verifikasi independen. Alamat yang dikenal tidak membuktikan keamanan tautan.",
+    "senderLinkWarning": "Periksa tautan",
+    "senderInfo": "Info pengirim",
+    "locateSender": "Ke pengirim",
+    "senderContext": "Konteks pengirim dan tautan",
+    "privacySenderChecks": "Juga membandingkan nama dan alamat pengirim yang ditampilkan dengan domain pengiriman dan tanda tangan dari detail Gmail yang Anda buka, secara lokal di perangkat ini."
   },
   "ko": {
     "description": "Gmail 이메일의 문맥과 링크를 기기에서 확인해 피싱 위험 징후를 알려 줍니다. 이메일은 서버로 전송하지 않습니다.",
@@ -1112,7 +1272,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "개인정보 보호",
     "coverage": "확장 프로그램이 읽을 수 있는 메시지의 텍스트와 링크를 검사합니다. 이메일 인증 여부, 이미지, QR 코드, 첨부파일, 링크의 목적지 페이지는 검증하지 않습니다. 경고가 없다고 해서 안전이 보장되지는 않습니다.",
     "scan": "기기 내 메시지 검사",
-    "scanHelp": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 MailContext Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB).",
+    "scanHelp": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 Mail Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB).",
     "choose": ".eml 또는 .txt 파일 선택",
     "analyze": "메시지 검사",
     "clear": "지우기",
@@ -1158,7 +1318,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "지원하지 않는 링크 유형입니다. 확장 프로그램은 이 링크로 이동하지 않습니다.",
     "reasonForward": "헤더에 전달된 이메일에서 볼 수 있는 징후가 있습니다. 전달 사실만으로 위험하다고 판단하지 않습니다.",
     "reasonReply": "회신 주소와 발신자 주소의 도메인이 다릅니다. 이 차이만으로 위험하다고 판단하지 않습니다.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "입력 내용의 일부만 검사했습니다. 크기, 형식 또는 분석 한계로 검사하지 못한 내용이 있습니다.",
     "unavailable": "읽을 수 있는 메시지 본문이 없어 검사할 수 없습니다. 헤더 정보는 제공될 수 있습니다.",
     "settingsHelp": "Gmail을 검사할 때 사용할 표시 언어와 확장 프로그램이 보여 줄 정보를 선택해 주세요.",
@@ -1203,7 +1363,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Google 비밀번호를 입력해 주세요:",
     "settingsError": "설정을 읽거나 저장할 수 없습니다. 다시 시도해 주세요.",
     "fileNone": "선택된 파일 없음",
-    "fileSelected": "선택된 파일: {name}"
+    "fileSelected": "선택된 파일: {name}",
+    "reasonCount": "주의 사항 {n}개",
+    "groupReasonCount": "링크 {groups}개 · 주의 사항 {reasons}개",
+    "reasonSenderName": "표시된 발신자 이름 또는 주소가 발신자 주소의 도메인과 일치하지 않습니다. 이 차이만으로 사칭이라고 판단할 수는 없습니다.",
+    "reasonDeliveryDomain": "발송 또는 전달 도메인이 발신자 도메인과 다릅니다. 정상적인 메일 전달 과정에서도 발생할 수 있습니다.",
+    "reasonSignerDomain": "표시된 서명 도메인이 발신자 도메인과 다릅니다. 이 차이만으로 사칭이라고 판단할 수는 없습니다.",
+    "senderAddress": "발신자 주소",
+    "senderName": "표시된 발신자 이름",
+    "senderDomain": "발신자 도메인",
+    "deliveryDomain": "발송 / 전달 도메인",
+    "signerDomain": "표시된 서명 도메인",
+    "senderClaimsNote": "발신자 및 인증 세부 정보는 제공된 내용이며, 별도로 검증되지 않았습니다. 익숙한 주소라고 해서 링크의 안전성이 확인되는 것은 아닙니다.",
+    "senderLinkWarning": "링크 확인",
+    "senderInfo": "발신자 정보",
+    "locateSender": "발신자로 이동",
+    "senderContext": "발신자 및 링크 관련 정보",
+    "privacySenderChecks": "표시된 발신자 이름·주소와 사용자가 Gmail에서 연 세부 정보의 발송·서명 도메인도 이 기기에서 로컬로 비교합니다."
   }
 }
 ;
@@ -1263,10 +1439,29 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
   }});
   return [...categories.values()].sort((a,b)=>M.LEVELS.indexOf(b.finding.level)-M.LEVELS.indexOf(a.finding.level));
  };
- M.summaryGroups=result=>M.warningCategories(result).flatMap(c=>c.pairs.length?c.pairs:[{finding:c.finding,link:null,positions:[]}]);
+ // 1.0.8: one exact displayed-text/destination item, with all its reasons.
+ // Never normalize, decode, sort queries, or reduce destinations to hostnames.
+ // At parser bounds equivalence is unknown: retain separate occurrence groups.
+ M.warningGroups=result=>{
+  const groups=new Map(),rank=f=>M.LEVELS.indexOf(f.level);
+  const addFinding=(group,f,link)=>{const existing=group.findings.find(x=>x.reason===f.reason);if(!existing)group.findings.push(f);else if(rank(f)>rank(existing))group.findings[group.findings.indexOf(existing)]=f;
+   if(!group.finding||rank(f)>rank(group.finding)){group.finding=f;group.link=link;}};
+  (result.links||[]).forEach((link,index)=>{
+   if(!link.findings?.length)return;const raw=link.info.raw??link.info.url??'',shown=link.info.shownText||'';
+   const bounded=link.info.partial||raw.length>=M.LIMIT.url||shown.length>=500;
+   const key=JSON.stringify(['link',raw,shown,...(bounded?[index]:[])]);
+   let group=groups.get(key);if(!group){group={key,link,finding:null,findings:[],level:'NO_FINDINGS',positions:[],occurrences:[],urls:[]};groups.set(key,group);}
+   const occurrence={link,position:index+1};group.positions.push(index+1);group.occurrences.push(occurrence);
+   for(const f of link.findings)addFinding(group,f,link);
+  });
+  for(const f of result.findings||[]){const key=JSON.stringify(f.senderEvidence?['sender',f.senderEvidence.address||'',f.senderEvidence.provenance]:['overall',f.reason]);let group=groups.get(key);if(!group){group={key,link:null,finding:null,findings:[],level:'NO_FINDINGS',positions:[],occurrences:[],urls:[]};groups.set(key,group);}if(f.senderEvidence)group.senderEvidence=f.senderEvidence;addFinding(group,f,null);}
+  for(const group of groups.values()){group.findings.sort((a,b)=>rank(b)-rank(a));group.level=M.maxLevel(...group.findings.map(f=>f.level));if(group.link)group.urls=[{raw:group.link.info.raw??group.link.info.url??'',occurrences:group.occurrences}];}
+  return [...groups.values()].sort((a,b)=>rank(b.finding)-rank(a.finding));
+ };
+ M.summaryGroups=result=>M.warningGroups(result);
  M.leadingFinding=result=>M.summaryGroups(result)[0]?.finding;
  M.summaryEvidence=entry=>{
-  const link=entry?.link;if(!link)return {facts:[],relation:false};const info=link.info,reason=entry.finding.reason;
+  const link=entry?.link;if(!link){const e=entry?.senderEvidence||entry?.finding?.senderEvidence;if(!e)return {facts:[],relation:false};const f=(key,value)=>({label:M.t(key),value:M.clean(value||''),kind:key==='senderName'?'text':'host'});const reason=entry.finding.reason;const facts=reason==='reasonDeliveryDomain'?[f('senderDomain',e.fromDomain||e.domain),f('deliveryDomain',e.deliveryDomain)]:reason==='reasonSignerDomain'?[f('senderDomain',e.fromDomain||e.domain),f('signerDomain',(e.signatureDomains||[]).join(', '))]:[f('senderName',e.displayName),f('senderAddress',e.address)];return {facts:facts.filter(x=>x.value),relation:true};}const info=link.info,reason=entry.finding.reason;
   const fact=(key,value,kind='text')=>({label:M.t(key),value:M.clean(value||''),kind});
   const actual=()=>fact('actualHost',info.host,'host');let facts=[],relation=false;
   if(reason==='reasonMismatch'&&info.displayHost&&info.host){facts=[fact('shownHost',info.displayHost,'host'),actual()];relation=true;}
@@ -1280,13 +1475,15 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
   }else if(reason==='reasonScheme'){facts=[fact('destinationType',/^[a-z][a-z0-9+.-]*:/i.exec(info.raw||'')?.[0]||M.t('unknown'))];}
   else if(reason==='reasonUnparsed'){facts=info.host?[actual()]:[fact('linkInput',M.clip(info.raw||info.shownText||'',120)+(Math.max((info.raw||'').length,(info.shownText||'').length)>120?'…':''))];}
   else if(info.host)facts=[actual()];
+  if(['reasonAccount','reasonSecret','reasonSpoof','reasonLookalike','reasonUnknown'].includes(reason)&&link.senderEvidence?.address)facts.push(fact('senderAddress',link.senderEvidence.address));
   return {facts:facts.filter(f=>f.value),relation};
  };
- M.summaryModel=result=>{const groups=M.summaryGroups(result),leading=groups[0];return {leading,reason:leading?M.t(leading.finding.reason):result.state==='PARTIAL'?M.t('partial'):result.state==='UNAVAILABLE'?M.t('unavailable'):'',evidence:M.summaryEvidence(leading),otherCount:Math.max(0,groups.length-1),groupCount:groups.length,linkCount:new Set(groups.flatMap(g=>g.positions)).size};};
+ M.summaryModel=result=>{const groups=M.summaryGroups(result),leading=groups[0];return {leading,reason:leading?M.t(leading.finding.reason):result.state==='PARTIAL'?M.t('partial'):result.state==='UNAVAILABLE'?M.t('unavailable'):'',evidence:M.summaryEvidence(leading),otherCount:Math.max(0,groups.length-1),groupCount:groups.length,linkGroupCount:groups.filter(g=>g.link).length,reasonCount:groups.reduce((n,g)=>n+g.findings.length,0),linkCount:new Set(groups.flatMap(g=>g.positions)).size};};
  M.renderSummaryEvidence=evidence=>{const row=M.el('span','',{class:'summary-evidence'});evidence.facts.forEach((fact,i)=>{if(i)row.append(M.el('span',evidence.relation?'→':'·',{class:'relation-separator','aria-hidden':'true',dir:'ltr'}));const part=M.el('span','',{class:'evidence-fact'});part.append(M.el('span',fact.label+': ',{class:'evidence-label'}),M.el('bdi',fact.value,{class:fact.kind==='host'?'evidence-value summary-host':'evidence-value',dir:fact.kind==='host'?'ltr':'auto'}));row.append(part);});return row;};
  M.resultLabel=result=>result.state==='PARTIAL'||result.state==='UNAVAILABLE'?M.t('unknown')+(M.LEVELS.indexOf(result.level)>=3?' · '+M.t(result.level):''):M.t(result.level);
  M.evidenceFacts=link=>{
   const facts=[M.fact(M.t('target'),M.clean(link.info.raw||link.info.url||''))];
+  if(link.senderEvidence?.address&&link.findings.some(f=>['W01','H01','H02','W03','C04'].includes(f.id)))facts.unshift(M.fact(M.t('senderAddress'),M.clean(link.senderEvidence.address)));
   if(link.info.shownText)facts.push(M.fact(M.t('linkText'),M.clean(link.info.shownText)));
   if(link.info.unicodeHost&&link.info.unicodeHost!==link.info.host)facts.push(M.fact(M.t('actualHost'),M.clean(link.info.unicodeHost)));
   if(link.occurrence?.context)facts.push(M.fact(M.t('context'),M.clean(link.occurrence.context).replace(/\r\n?/g,'\n').replace(/\n[ \t]*\n(?:[ \t]*\n)+/g,'\n\n').trim()));
@@ -1300,28 +1497,39 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
  M.appendReasons=(parent,result,options={})=>{
   if(result.state==='PARTIAL')parent.append(M.el('p',M.t('partial'),{class:'note'}));
   if(result.state==='UNAVAILABLE')parent.append(M.el('p',M.t('unavailable'),{class:'note'}));
-  const categories=M.warningCategories(result),singlePair=M.summaryGroups(result).length===1;
-  for(const category of categories){
-   const section=M.el('section','',{class:'warning-category'});
-   if(!(options.summaryVisible&&categories.length===1))section.append(M.el('h3',M.t(category.finding.reason),{class:'finding category-title'}));
-   for(const pair of category.pairs){
-    const multiplePairs=category.pairs.length>1,box=M.el(multiplePairs?'details':'section','',{class:'pair-group'});
-    box._findingKey=category.finding.id+pair.key;
-    if(multiplePairs){const summary=M.el('summary','');summary.append(M.renderSummaryEvidence(M.summaryEvidence(pair)),M.el('span',M.t('linkCount',{n:pair.positions.length}),{class:'note pair-count'}));box.append(summary);}
-    else if(!(options.summaryVisible&&singlePair))box.append(M.renderSummaryEvidence(M.summaryEvidence(pair)));
-    for(const url of pair.urls){
-     const multi=pair.urls.length>1,entry=M.el(multi?'details':'div','',{class:'url-entry evidence'});entry._findingKey=category.finding.id+pair.key+url.raw;
-     if(multi){const summary=M.el('summary','',{class:'url-summary'});summary.append(M.el('bdi',M.clean(url.raw),{dir:'ltr'}),M.el('span',M.t('occurrences',{n:url.occurrences.length}),{class:'note'}));entry.append(summary);}
-     // Keep context and displayed text for every occurrence, even when URLs repeat.
-     for(const occurrence of url.occurrences){const row=M.el('div','',{class:'occurrence'});row.append(M.renderFacts(M.evidenceFacts(occurrence.link)));
-      if(options.locate){const location=M.el('div','',{class:'occurrence-location'});const button=M.button('locateLink',()=>options.locate(occurrence.position,occurrence.link,button),'locate-link');button.dataset.position=String(occurrence.position);location.append(button);row.append(location);}
-      entry.append(row);
-     }
-     box.append(entry);
-    }
-    section.append(box);
+  const groups=M.warningGroups(result),multiple=groups.length>1;
+  for(const group of groups){
+   const section=M.el('section','',{class:'warning-category warning-group severity-'+group.level});
+   const box=M.el(multiple?'details':'section','',{class:'pair-group'});box._findingKey=group.key;
+   if(multiple){const summary=M.el('summary','',{class:'group-summary'});summary.append(M.status(group.level),M.renderSummaryEvidence(M.summaryEvidence(group)),M.el('span',M.t('reasonCount',{n:group.findings.length}),{class:'reason-count'}));
+    if(group.link)summary.append(M.el('bdi',M.clean(group.link.info.raw??group.link.info.url??''),{class:'group-destination',dir:'ltr'}));else summary.append(M.el('span',M.t(group.finding.reason),{class:'finding'}));box.append(summary);}
+   else if(!options.summaryVisible){const head=M.el('div','',{class:'group-heading'});head.append(M.renderSummaryEvidence(M.summaryEvidence(group)),M.el('span',M.t('reasonCount',{n:group.findings.length}),{class:'reason-count'}));box.append(head);}
+   const content=M.el('div','',{class:'group-content'});
+   if(!(options.summaryVisible&&!multiple&&group.findings.length===1)){
+    const list=M.el('ul','',{class:'finding-list reason-list','aria-label':M.t('reason')});
+    for(const f of group.findings){const item=M.el('li','',{class:'finding reason-item reason-'+f.level,'aria-label':M.t(f.level)+' · '+M.t(f.reason)});
+     item.append(M.el('span','',{class:'reason-dot','aria-hidden':'true'}),M.el('span',M.t(f.reason),{class:'reason-copy'}));list.append(item);}
+    content.append(list);
    }
-   parent.append(section);
+   if(group.senderEvidence){const e=group.senderEvidence,facts=[];for(const [key,value]of [['senderName',e.displayName],['senderAddress',e.address],['deliveryDomain',e.deliveryDomain],['signerDomain',(e.signatureDomains||[]).join(', ')]])if(value)facts.push(M.fact(M.t(key),M.clean(value)));content.append(M.renderFacts(facts),M.el('p',M.t('senderClaimsNote'),{class:'note sender-note'}));if(options.locateSender)content.append(M.button('locateSender',options.locateSender,'locate-link'));}
+   if(group.link){
+    const first=group.occurrences[0].link;
+    // These exact values are common to the group; show them once.
+    const shared=M.evidenceFacts(first).filter(f=>f.label!==M.t('context'));
+    content.append(M.renderFacts(shared));
+    const entry=M.el('div','',{class:'url-entry evidence'});entry._findingKey=group.key;
+    for(const occurrence of group.occurrences){
+     const row=M.el('div','',{class:'occurrence'});
+     // Preserve each original context, intent, evidence and location association.
+     const extra=M.linkFacts(occurrence.link).filter(f=>![M.t('shownHost'),M.t('actualHost'),M.t('destinationHost')].includes(f.label));
+     const context=M.evidenceFacts(occurrence.link).filter(f=>f.label===M.t('context'));
+     if(extra.length||context.length)row.append(M.renderFacts([...extra,...context]));
+     if(options.locate){const location=M.el('div','',{class:'occurrence-location'});const button=M.button('locateLink',()=>options.locate(occurrence.position,occurrence.link,button),'locate-link');button.dataset.position=String(occurrence.position);location.append(button);if(options.locateSender&&occurrence.link.senderEvidence?.address&&occurrence.link.findings.some(f=>['W01','H01','H02','W03','C04'].includes(f.id)))location.append(M.button('locateSender',options.locateSender,'locate-link'));row.append(location);}
+     entry.append(row);
+    }
+    content.append(entry);
+   }
+   box.append(content);section.append(box);parent.append(section);
   }
   if(result.header){const d=M.el('details','',{class:'header-details'});d.append(M.el('summary',M.t('headers')),M.el('p',M.t('headerNote'),{class:'note'}));
    for(const a of result.header.authClaims.slice(0,20))d.append(M.el('p',M.clean(`${a.method.toUpperCase()} = ${a.result} [${a.authservId}]`),{class:'mono'}));

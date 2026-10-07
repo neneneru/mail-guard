@@ -39,7 +39,7 @@
     "message": "Lokale E-Mail-Prüfung"
   },
   "scanHelp": {
-    "message": "Fügen Sie E-Mail-Header oder eine vollständige E-Mail ein oder wählen Sie eine .eml- oder .txt-Datei, um sie nach denselben Regeln wie bei den automatischen Prüfungen von MailContext Guard in Gmail zu analysieren. Der Inhalt wird nur auf Ihrem Gerät verarbeitet, nicht nach außen gesendet und nicht gespeichert (bis 5 MB)."
+    "message": "Fügen Sie E-Mail-Header oder eine vollständige E-Mail ein oder wählen Sie eine .eml- oder .txt-Datei, um sie nach denselben Regeln wie bei den automatischen Prüfungen von Mail Guard in Gmail zu analysieren. Der Inhalt wird nur auf Ihrem Gerät verarbeitet, nicht nach außen gesendet und nicht gespeichert (bis 5 MB)."
   },
   "choose": {
     "message": ".eml oder .txt auswählen"
@@ -177,7 +177,7 @@
     "message": "Die Domain der Antwortadresse unterscheidet sich von der Absenderdomain. Dieser Unterschied allein weist nicht auf eine Gefahr hin."
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "Nur ein Teil konnte wegen Größen-, Format- oder Analysegrenzen geprüft werden."
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "Ausgewählte Datei: {name}"
+  },
+  "reasonCount": {
+    "message": "Hinweise: {n}"
+  },
+  "groupReasonCount": {
+    "message": "Links: {groups} · Hinweise: {reasons}"
+  },
+  "reasonSenderName": {
+    "message": "Der angezeigte Absendername oder die angezeigte Adresse passt nicht zur Domain der Absenderadresse. Das allein belegt keine Identitätstäuschung."
+  },
+  "reasonDeliveryDomain": {
+    "message": "Die Versand- oder Weiterleitungsdomain weicht von der Absenderdomain ab. Eine legitime Weiterleitung kann dies erklären."
+  },
+  "reasonSignerDomain": {
+    "message": "Die angegebene Signaturdomain weicht von der Absenderdomain ab. Das allein belegt keine Identitätstäuschung."
+  },
+  "senderAddress": {
+    "message": "Absenderadresse"
+  },
+  "senderName": {
+    "message": "Angezeigter Absendername"
+  },
+  "senderDomain": {
+    "message": "Absenderdomain"
+  },
+  "deliveryDomain": {
+    "message": "Versand- / Weiterleitungsdomain"
+  },
+  "signerDomain": {
+    "message": "Angegebene Signaturdomain"
+  },
+  "senderClaimsNote": {
+    "message": "Die Angaben zu Absender und Authentifizierung wurden nicht unabhängig überprüft. Eine vertraute Adresse bestätigt nicht die Sicherheit des Links."
+  },
+  "senderLinkWarning": {
+    "message": "Links prüfen"
+  },
+  "senderInfo": {
+    "message": "Absenderinfos"
+  },
+  "locateSender": {
+    "message": "Zum Absender"
+  },
+  "senderContext": {
+    "message": "Kontext zu Absender und Links"
+  },
+  "privacySenderChecks": {
+    "message": "Vergleicht außerdem lokal auf diesem Gerät den angezeigten Absendernamen und die Absenderadresse mit den Versand- und Signaturdomains aus den von Ihnen geöffneten Gmail-Details."
   }
 }

@@ -39,7 +39,7 @@
     "message": "本地邮件检查"
   },
   "scanHelp": {
-    "message": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 MailContext Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。"
+    "message": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 Mail Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。"
   },
   "choose": {
     "message": "选择 .eml 或 .txt"
@@ -177,7 +177,7 @@
     "message": "回复地址与发件人地址的域名不同。仅凭这一差异不能判定有危险。"
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "仅检查了部分输入。由于大小、格式或解析限制，部分内容未经检查。"
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "已选择文件：{name}"
+  },
+  "reasonCount": {
+    "message": "{n} 个注意事项"
+  },
+  "groupReasonCount": {
+    "message": "{groups} 个链接 · {reasons} 个注意事项"
+  },
+  "reasonSenderName": {
+    "message": "显示的发件人名称或地址与发件人地址的域名不一致。仅凭这一点无法判定是否存在冒充。"
+  },
+  "reasonDeliveryDomain": {
+    "message": "发送或转发域名与发件人域名不同。正常转发也可能出现这种情况。"
+  },
+  "reasonSignerDomain": {
+    "message": "所显示的签名域名与发件人域名不同。仅凭这一点无法判定是否存在冒充。"
+  },
+  "senderAddress": {
+    "message": "发件人地址"
+  },
+  "senderName": {
+    "message": "显示的发件人名称"
+  },
+  "senderDomain": {
+    "message": "发件人域名"
+  },
+  "deliveryDomain": {
+    "message": "发送／转发域名"
+  },
+  "signerDomain": {
+    "message": "所显示的签名域名"
+  },
+  "senderClaimsNote": {
+    "message": "发件人和身份验证详情来自所提供的信息，未经独立验证。熟悉的地址并不能证明链接安全。"
+  },
+  "senderLinkWarning": {
+    "message": "检查链接"
+  },
+  "senderInfo": {
+    "message": "发件人信息"
+  },
+  "locateSender": {
+    "message": "跳转到发件人"
+  },
+  "senderContext": {
+    "message": "发件人和链接相关信息"
+  },
+  "privacySenderChecks": {
+    "message": "还会在此设备上比较 Gmail 显示的发件人名称／地址，以及您打开的详情中的发送／签名域名。"
   }
 }

@@ -39,7 +39,7 @@
     "message": "Revisión local de correo"
   },
   "scanHelp": {
-    "message": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de MailContext Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB)."
+    "message": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de Mail Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB)."
   },
   "choose": {
     "message": "Elegir .eml o .txt"
@@ -177,7 +177,7 @@
     "message": "Los dominios de respuesta y del remitente son distintos. Esta diferencia por sí sola no indica peligro."
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "Solo se pudo revisar parte del contenido debido a límites de tamaño, formato o análisis."
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "Archivo seleccionado: {name}"
+  },
+  "reasonCount": {
+    "message": "Motivos: {n}"
+  },
+  "groupReasonCount": {
+    "message": "Enlaces: {groups} · motivos: {reasons}"
+  },
+  "reasonSenderName": {
+    "message": "El nombre o la dirección que se muestran no coinciden con el dominio de la dirección del remitente. Esto por sí solo no demuestra una suplantación."
+  },
+  "reasonDeliveryDomain": {
+    "message": "El dominio de envío o reenvío difiere del dominio del remitente. Un reenvío legítimo puede explicar esta diferencia."
+  },
+  "reasonSignerDomain": {
+    "message": "El dominio de firma indicado difiere del dominio del remitente. Esto por sí solo no demuestra una suplantación."
+  },
+  "senderAddress": {
+    "message": "Dirección del remitente"
+  },
+  "senderName": {
+    "message": "Nombre mostrado del remitente"
+  },
+  "senderDomain": {
+    "message": "Dominio del remitente"
+  },
+  "deliveryDomain": {
+    "message": "Dominio de envío / reenvío"
+  },
+  "signerDomain": {
+    "message": "Dominio de firma indicado"
+  },
+  "senderClaimsNote": {
+    "message": "Los datos del remitente y de autenticación son información indicada, sin verificación independiente. Una dirección conocida no verifica el enlace."
+  },
+  "senderLinkWarning": {
+    "message": "Revisar enlaces"
+  },
+  "senderInfo": {
+    "message": "Información del remitente"
+  },
+  "locateSender": {
+    "message": "Ir al remitente"
+  },
+  "senderContext": {
+    "message": "Contexto del remitente y los enlaces"
+  },
+  "privacySenderChecks": {
+    "message": "También compara localmente, en este dispositivo, el nombre y la dirección mostrados del remitente con los dominios de envío y firma de los detalles que abres en Gmail."
   }
 }

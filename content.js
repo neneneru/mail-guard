@@ -1,9 +1,9 @@
-/* MailContext Guard 1.0.7 — bundled locally; no remote dependencies. */
-/* MailContext Guard. Pure, bounded local analysis; no network or persistent state. */
+/* Mail Guard 1.1.2 — bundled locally; no remote dependencies. */
+/* Mail Guard. Pure, bounded local analysis; no network or persistent state. */
 (() => {
   'use strict';
   const M = globalThis.MCG = globalThis.MCG || Object.create(null);
-  M.VERSION = '1.0.7';
+  M.VERSION = '1.1.2';
   M.LIMIT = Object.freeze({url:16384, links:500, context:1000, text:262144, nodes:20000, header:262144, fields:2048, field:32768, raw:5000000, mimeParts:128, depth:10});
   M.LEVELS = ['NO_FINDINGS','INFO','CAUTION','WARNING','HIGH_RISK'];
   M.maxLevel = (...x) => M.LEVELS[Math.max(0,...x.map(v=>M.LEVELS.indexOf(v)))];
@@ -422,6 +422,67 @@ globalThis.MCG.TERMS = {
  M.brandHost=(b,h)=>!!b&&b.domains.some(d=>M.boundary(h,d));
 })();
 
+/* Sender metadata is an unverified claim, never authentication or a safe verdict. */
+(() => {
+ 'use strict';const M=globalThis.MCG;
+ M.senderDomain=value=>{
+  if(typeof value!=='string'||value.length>253)return '';
+  const raw=value.trim().toLowerCase().replace(/\.$/,'');
+  if(!raw||/[\s/@:#?\[\]\\<>]/.test(raw))return '';
+  let host;try{host=new URL('https://'+raw).hostname.toLowerCase();}catch{return '';}
+  if(!host.includes('.')||/^\d+(?:\.\d+){3}$/.test(host)||!host.split('.').every(x=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(x)))return '';
+  return host;
+ };
+ M.mailboxInfo=value=>{
+  const empty={address:'',domain:'',displayName:''};if(typeof value!=='string'||value.length>1000||/[\r\n]/.test(value))return empty;
+  let text=value.trim(),name='';const angle=/^([^<>]*)<([^<>]+)>$/.exec(text);
+  if(angle){name=angle[1].trim().replace(/^"([^"]*)"$/,'$1');text=angle[2].trim();}else if(/[<>]/.test(text))return empty;
+  const match=/^([a-z0-9.!#$%&'*+\/=?^_`{|}~-]+)@([^@]+)$/i.exec(text);
+  if(!match||match[1].startsWith('.')||match[1].endsWith('.')||match[1].includes('..'))return empty;
+  const domain=M.senderDomain(match[2]);if(!domain)return empty;
+  return {address:match[1]+'@'+domain,domain,displayName:M.clip(name,200)};
+ };
+ const domainBrand=domain=>M.BRANDS.find(b=>b.domains.some(d=>M.boundary(domain,d)))||null;
+ const publicMailboxes=new Set(['outlook.com','live.com','icloud.com']);
+ M.senderBrand=sender=>{const domain=M.mailboxInfo(sender).domain;return domain?M.BRANDS.find(b=>b.domains.some(d=>!publicMailboxes.has(d)&&M.boundary(domain,d)))||null:null;};
+ M.compareSenderDomains=(a,b)=>{
+  a=M.senderDomain(a);b=M.senderDomain(b);if(!a||!b)return 'UNKNOWN';if(a===b)return 'SAME';
+  const aa=M.domain(a).registrable,bb=M.domain(b).registrable;if(aa&&bb&&aa===bb)return 'RELATED';
+  const ba=domainBrand(a),br=domainBrand(b);return ba&&br&&ba.id===br.id?'RELATED':'DIFFERENT';
+ };
+ M.senderMetadata=(address,displayName='')=>{
+  const box=M.mailboxInfo(address),name=M.clip(displayName||box.displayName,200).trim();
+  const nameBrand=M.BRANDS.find(b=>b.words.some(w=>M.normalize(w)===M.normalize(name)))||null;
+  const displayedAddress=M.mailboxInfo(name),claimedDomain=displayedAddress.domain;
+  // Shared mailbox-provider ownership does not identify the company as sender.
+  // Outlook/Live/iCloud users can choose ordinary personal mailbox addresses.
+  const nameDomainMatches=nameBrand?.domains.some(d=>!publicMailboxes.has(d)&&M.boundary(box.domain,d));
+  const actualSite=box.domain?M.domain(box.domain).registrable:null,claimedSite=claimedDomain?M.domain(claimedDomain).registrable:null;
+  const displayedDomainMatches=box.domain===claimedDomain||!!actualSite&&actualSite===claimedSite;
+  const nameMismatch=!!box.domain&&((!!nameBrand&&!nameDomainMatches)||(!!claimedDomain&&!displayedDomainMatches));
+  return {address:box.address,domain:box.domain,displayName:name,claimedBrand:nameBrand?.id||'',claimedDomain,nameMismatch,provenance:'UNVERIFIED_SENDER_CLAIM'};
+ };
+ M.senderHeaderEvidence=(fields,sender)=>{
+  const all=n=>fields.filter(f=>f.name===n),from=all('from'),returns=all('return-path');
+  const goodFrom=from.length===1&&!from[0].invalid,fromDomain=goodFrom?M.mailboxInfo(from[0].value).domain:'';
+  const deliveryDomain=returns.length===1&&!returns[0].invalid?M.mailboxInfo(returns[0].value).domain:'';
+  const signatures=all('dkim-signature');let malformed=false;const signatureDomains=[];
+  for(const field of signatures.slice(0,50)){
+   const ds=M.splitHeader(field.value).filter(x=>/^d\s*=/i.test(x));
+   const domain=ds.length===1&&!field.invalid?M.senderDomain(ds[0].slice(ds[0].indexOf('=')+1)):'';
+   if(!domain)malformed=true;else if(!signatureDomains.includes(domain))signatureDomains.push(domain);
+  }
+  const signerRelation=!fromDomain||!signatureDomains.length||malformed||signatures.length>50?'UNKNOWN':signatureDomains.some(d=>M.compareSenderDomains(fromDomain,d)==='SAME')?'SAME':signatureDomains.some(d=>M.compareSenderDomains(fromDomain,d)==='RELATED')?'RELATED':'DIFFERENT';
+  return {...M.senderMetadata(goodFrom?sender:''),fromDomain,deliveryDomain,signatureDomains,deliveryRelation:M.compareSenderDomains(fromDomain,deliveryDomain),signerRelation,provenance:'UNVERIFIED_HEADER_CLAIM'};
+ };
+ // Gmail's own displayed details are useful claims, not verified SPF/DKIM.
+ M.senderDisplayEvidence=(metadata,observations)=>{
+  if(!metadata?.address||!metadata.domain||!observations||observations.source!=='GMAIL_DETAILS'||observations.fromAddress!==metadata.address)return metadata;
+  const deliveryDomain=M.senderDomain(observations.mailedBy||''),signed=M.senderDomain(observations.signedBy||''),signatureDomains=signed?[signed]:[];
+  return {...metadata,fromDomain:metadata.domain,deliveryDomain,signatureDomains,deliveryRelation:M.compareSenderDomains(metadata.domain,deliveryDomain),signerRelation:signed?M.compareSenderDomains(metadata.domain,signed):'UNKNOWN',provenance:'GMAIL_DISPLAY_CLAIM'};
+ };
+})();
+
 (() => {
  'use strict';const M=globalThis.MCG;let cache;
  const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -510,7 +571,7 @@ globalThis.MCG.TERMS = {
     duplicateIdentity:all('from').length>1||all('reply-to').length>1,
     indirection:fields.some(f=>/^(x-forwarded-|x-sieve-redirected-|resent-|list-id)/.test(f.name))||/^<?srs[01][=+-]/i.test(first('return-path')),
     replyMismatch:reply.length>0&&from.length>0&&reply.some(x=>!from.includes(x)),
-    sender:first('from'),replyTo:first('reply-to')};
+    sender:first('from'),replyTo:first('reply-to'),senderEvidence:M.senderHeaderEvidence(fields,first('from'))};
  };
 })();
 
@@ -519,7 +580,8 @@ globalThis.MCG.TERMS = {
  M.analyzeLink=(input,message={})=>{
   const info=M.inspectUrl(input.href,input.label);const context=M.context(input.context||input.label||'');const labelContext=M.context(input.label||'');
   const binding=input.binding||'anchor';const bound=binding!=='ambiguous';
-  const brand=M.BRANDS.find(b=>labelContext.brandIds.includes(b.id))||M.BRANDS.find(b=>context.brandIds.includes(b.id))||M.senderBrand(message.sender);
+  const senderEvidence=M.senderMetadata(message.sender,message.senderName||'');
+  const brand=M.BRANDS.find(b=>labelContext.brandIds.includes(b.id))||M.BRANDS.find(b=>context.brandIds.includes(b.id))||M.senderBrand(message.sender)||M.BRANDS.find(b=>b.id===senderEvidence.claimedBrand);
   const active=!input.quoted&&(bound?context.active:labelContext.active);const secret=!input.quoted&&(bound?context.secretRequest:labelContext.secretRequest);
   const findings=[];const add=(id,level,reason)=>{if(!findings.some(x=>x.id===id))findings.push({id,level,reason,confidence:['HIGH_RISK','WARNING'].includes(level)?'high':'medium'});};
   const destinations=[{host:info.host,role:info.role,url:info.url},...info.candidates];
@@ -542,15 +604,19 @@ globalThis.MCG.TERMS = {
   if(!bound&&!input.quoted&&context.active&&third&&!labelContext.active)add('C01','CAUTION','reasonAmbiguous');
   const level=M.maxLevel(...findings.map(f=>f.level));
   const intent=secret?'secret':active?'account':context.share?'shared':'generic';
-  return {id:input.id||'',info,findings,level,intent,brand:brand?.name||'',occurrence:{context:M.clip(input.context||input.label||'',M.LIMIT.context),binding,quoted:!!input.quoted},action:info.unsupported?'BLOCK_UNSUPPORTED':M.LEVELS.indexOf(level)>=3?'CONFIRM':'ALLOW',coverage:info.partial?'PARTIAL':'READY'};
+  return {id:input.id||'',info,findings,level,intent,brand:brand?.name||'',senderEvidence,occurrence:{context:M.clip(input.context||input.label||'',M.LIMIT.context),binding,quoted:!!input.quoted},action:info.unsupported?'BLOCK_UNSUPPORTED':M.LEVELS.indexOf(level)>=3?'CONFIRM':'ALLOW',coverage:info.partial?'PARTIAL':'READY'};
  };
  M.analyzeMessage=input=>{
   const links=(input.links||[]).slice(0,M.LIMIT.links).map(x=>M.analyzeLink(x,input));
-  const findings=[];let header=null;
-  if(input.headers){header=M.parseHeaders(input.headers);if(header.indirection)addHeader('I01','INFO','reasonForward');if(header.replyMismatch)addHeader('I03','INFO','reasonReply');}
+  const findings=[];let header=null;let senderEvidence=M.senderDisplayEvidence(M.senderMetadata(input.sender,input.senderName||''),input.senderObservations);
+  if(input.headers){header=M.parseHeaders(input.headers);senderEvidence=header.senderEvidence;if(header.indirection)addHeader('I01','INFO','reasonForward');if(header.replyMismatch)addHeader('I03','INFO','reasonReply');}
+  if(senderEvidence.nameMismatch)addHeader('I05','INFO','reasonSenderName');
+  if(senderEvidence.deliveryRelation==='DIFFERENT')addHeader('I06','INFO','reasonDeliveryDomain');
+  if(senderEvidence.signerRelation==='DIFFERENT')addHeader('I07','INFO','reasonSignerDomain');
+  for(const f of findings)if(['I05','I06','I07'].includes(f.id))f.senderEvidence=senderEvidence;
   function addHeader(id,level,reason){findings.push({id,level,reason,confidence:'low'});}
   const partial=!!input.partial||(input.links||[]).length>M.LIMIT.links||links.some(x=>x.coverage==='PARTIAL')||header?.partial;
-  return {version:M.VERSION,level:M.maxLevel(...links.map(x=>x.level),...findings.map(x=>x.level)),links,findings,header,
+  return {version:M.VERSION,level:M.maxLevel(...links.map(x=>x.level),...findings.map(x=>x.level)),links,findings,header,senderEvidence,
    coverage:{renderedBody:input.noBody?'NOT_INSPECTED':partial?'PARTIAL':'INSPECTED',urls:partial?'PARTIAL':'INSPECTED',headers:header?'UNVERIFIED_CLAIMS':'NOT_INSPECTED',qr:'NOT_INSPECTED',remoteDestination:'NOT_INSPECTED'},state:input.noBody&&!links.length?'UNAVAILABLE':partial?'PARTIAL':'READY'};
  };
 })();
@@ -570,7 +636,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privacy",
     "coverage": "Checks cover the message text and links available to the extension. Email authentication, images, QR codes, attachments, and destination pages are not verified. A missing warning is not a safety guarantee.",
     "scan": "Local message check",
-    "scanHelp": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as MailContext Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB).",
+    "scanHelp": "Paste email headers or a complete email, or choose an .eml or .txt file, to analyze it using the same rules as Mail Guard’s automatic checks in Gmail. Content is processed only on your device and is not sent elsewhere or saved (up to 5 MB).",
     "choose": "Choose .eml or .txt",
     "analyze": "Check message",
     "clear": "Clear",
@@ -616,7 +682,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Unsupported link type. No navigation is performed by the extension.",
     "reasonForward": "Headers contain signs consistent with forwarding. Forwarding alone does not indicate danger.",
     "reasonReply": "Reply and sender domains differ. This difference alone does not indicate danger.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Only part of this input could be checked. Size, format or parsing limits left some content uninspected.",
     "unavailable": "There is no readable message body to check. Header details may still be available.",
     "settingsHelp": "Choose the display language and what the extension shows while checking Gmail.",
@@ -661,7 +727,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Enter your Google password:",
     "settingsError": "Unable to read or save settings. Try again.",
     "fileNone": "No file selected",
-    "fileSelected": "Selected file: {name}"
+    "fileSelected": "Selected file: {name}",
+    "reasonCount": "Reasons: {n}",
+    "groupReasonCount": "Links: {groups} · reasons: {reasons}",
+    "reasonSenderName": "The displayed sender name or address does not match the sender address domain. This alone does not establish impersonation.",
+    "reasonDeliveryDomain": "The sending or forwarding domain differs from the sender domain. Legitimate forwarding can explain this.",
+    "reasonSignerDomain": "The reported signing domain differs from the sender domain. This alone does not establish impersonation.",
+    "senderAddress": "Sender address",
+    "senderName": "Displayed sender name",
+    "senderDomain": "Sender domain",
+    "deliveryDomain": "Sending / forwarding domain",
+    "signerDomain": "Reported signing domain",
+    "senderClaimsNote": "Sender and authentication details are reported information, not independently verified. A familiar address does not verify the link.",
+    "senderLinkWarning": "Check links",
+    "senderInfo": "Sender info",
+    "locateSender": "Go to sender",
+    "senderContext": "Sender and link context",
+    "privacySenderChecks": "Also compares the displayed sender name/address and sending/signing domains from Gmail details you open, locally on this device."
   },
   "ja": {
     "description": "Gmailの本文とリンクを端末内で確認し、フィッシングの兆候を通知します。メール内容をサーバーへ送信しません。",
@@ -723,7 +805,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "未対応のリンク形式です。拡張機能はこのリンクを開きません。",
     "reasonForward": "ヘッダーに転送の可能性を示す情報があります。転送だけで危険とは判断できません。",
     "reasonReply": "返信先と差出人のドメインが異なります。この違いだけで危険とは判断できません。",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "一部のみ確認しました。サイズ・形式・解析上限などにより、未確認の内容が残っています。",
     "unavailable": "確認できるメール本文がありません。ヘッダー情報は参照できる場合があります。",
     "settingsHelp": "表示言語と、Gmailでの自動チェックや表示する情報を設定します。",
@@ -768,7 +850,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Googleのパスワードを入力してください：",
     "settingsError": "設定の読み込み、または保存に失敗しました。もう一度お試しください。",
     "fileNone": "ファイルは選択されていません",
-    "fileSelected": "選択したファイル：{name}"
+    "fileSelected": "選択したファイル：{name}",
+    "reasonCount": "注意点 {n} 件",
+    "groupReasonCount": "リンク {groups} 件・注意点 {reasons} 件",
+    "reasonSenderName": "表示された送信者名やアドレスが、送信者アドレスのドメインと一致しません。この違いだけでなりすましとは判断できません。",
+    "reasonDeliveryDomain": "送信経路や転送元のドメインが、送信者のドメインと異なります。正規の転送でも起こる場合があります。",
+    "reasonSignerDomain": "表示上の署名ドメインが、送信者のドメインと異なります。この違いだけでなりすましとは判断できません。",
+    "senderAddress": "送信者アドレス",
+    "senderName": "表示された送信者名",
+    "senderDomain": "送信者ドメイン",
+    "deliveryDomain": "送信経路／転送ドメイン",
+    "signerDomain": "表示上の署名ドメイン",
+    "senderClaimsNote": "送信者や認証の詳細は記載された情報であり、独自に検証したものではありません。見慣れたアドレスでも、リンクの安全性は確認できません。",
+    "senderLinkWarning": "リンクを確認",
+    "senderInfo": "送信者情報",
+    "locateSender": "送信者の位置へ",
+    "senderContext": "送信者とリンクの関連情報",
+    "privacySenderChecks": "Gmail画面の送信者名・アドレスと、利用者が開いた詳細欄の送信元・署名元ドメインも、この端末内で比較します。"
   },
   "zh_CN": {
     "description": "在本设备上检查 Gmail 邮件内容和链接，提示潜在钓鱼风险。不会将邮件发送到服务器。",
@@ -784,7 +882,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "隐私",
     "coverage": "检查范围为扩展程序可读取的邮件正文和链接。不验证邮件认证、图片、二维码、附件或目标网页。没有警告不代表安全。",
     "scan": "本地邮件检查",
-    "scanHelp": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 MailContext Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。",
+    "scanHelp": "粘贴邮件头或完整邮件，或选择 .eml 或 .txt 文件，即可使用与 Mail Guard 在 Gmail 中自动检查相同的规则进行分析。内容仅在您的设备上处理，不会向外发送或保存（最大 5 MB）。",
     "choose": "选择 .eml 或 .txt",
     "analyze": "检查邮件",
     "clear": "清除",
@@ -830,7 +928,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "不支持此类链接。扩展不会执行跳转。",
     "reasonForward": "邮件头包含可能经过转发的迹象。仅凭转发不能判定有危险。",
     "reasonReply": "回复地址与发件人地址的域名不同。仅凭这一差异不能判定有危险。",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "仅检查了部分输入。由于大小、格式或解析限制，部分内容未经检查。",
     "unavailable": "没有可读取的邮件正文。仍可能显示邮件头信息。",
     "settingsHelp": "在这里选择界面语言，以及扩展在 Gmail 中显示哪些提示。",
@@ -875,7 +973,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "请输入您的 Google 密码：",
     "settingsError": "无法读取或保存设置。请重试。",
     "fileNone": "未选择文件",
-    "fileSelected": "已选择文件：{name}"
+    "fileSelected": "已选择文件：{name}",
+    "reasonCount": "{n} 个注意事项",
+    "groupReasonCount": "{groups} 个链接 · {reasons} 个注意事项",
+    "reasonSenderName": "显示的发件人名称或地址与发件人地址的域名不一致。仅凭这一点无法判定是否存在冒充。",
+    "reasonDeliveryDomain": "发送或转发域名与发件人域名不同。正常转发也可能出现这种情况。",
+    "reasonSignerDomain": "所显示的签名域名与发件人域名不同。仅凭这一点无法判定是否存在冒充。",
+    "senderAddress": "发件人地址",
+    "senderName": "显示的发件人名称",
+    "senderDomain": "发件人域名",
+    "deliveryDomain": "发送／转发域名",
+    "signerDomain": "所显示的签名域名",
+    "senderClaimsNote": "发件人和身份验证详情来自所提供的信息，未经独立验证。熟悉的地址并不能证明链接安全。",
+    "senderLinkWarning": "检查链接",
+    "senderInfo": "发件人信息",
+    "locateSender": "跳转到发件人",
+    "senderContext": "发件人和链接相关信息",
+    "privacySenderChecks": "还会在此设备上比较 Gmail 显示的发件人名称／地址，以及您打开的详情中的发送／签名域名。"
   },
   "es": {
     "description": "Alertas locales de suplantación de identidad en Gmail. Revisa texto y enlaces sin enviar tus correos a un servidor.",
@@ -891,7 +1005,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privacidad",
     "coverage": "Se revisan el texto y los enlaces del correo que la extensión puede leer. No se verifican la autenticación del correo, las imágenes, los códigos QR, los adjuntos ni las páginas de destino. La ausencia de advertencias no garantiza la seguridad.",
     "scan": "Revisión local de correo",
-    "scanHelp": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de MailContext Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB).",
+    "scanHelp": "Pega las cabeceras o un correo completo, o elige un archivo .eml o .txt, para analizarlo con las mismas reglas que las comprobaciones automáticas de Mail Guard en Gmail. El contenido se procesa solo en tu dispositivo y no se envía fuera ni se guarda (hasta 5 MB).",
     "choose": "Elegir .eml o .txt",
     "analyze": "Revisar correo",
     "clear": "Borrar",
@@ -937,7 +1051,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Tipo de enlace no compatible. La extensión no abre este enlace.",
     "reasonForward": "Las cabeceras contienen indicios de reenvío. El reenvío por sí solo no indica peligro.",
     "reasonReply": "Los dominios de respuesta y del remitente son distintos. Esta diferencia por sí sola no indica peligro.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Solo se pudo revisar parte del contenido debido a límites de tamaño, formato o análisis.",
     "unavailable": "No hay un cuerpo de mensaje legible. Puede haber información de cabeceras.",
     "settingsHelp": "Elige el idioma y qué información muestra la extensión al revisar Gmail.",
@@ -982,7 +1096,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Introduce tu contraseña de Google:",
     "settingsError": "No se pudieron leer o guardar los ajustes. Inténtalo de nuevo.",
     "fileNone": "Ningún archivo seleccionado",
-    "fileSelected": "Archivo seleccionado: {name}"
+    "fileSelected": "Archivo seleccionado: {name}",
+    "reasonCount": "Motivos: {n}",
+    "groupReasonCount": "Enlaces: {groups} · motivos: {reasons}",
+    "reasonSenderName": "El nombre o la dirección que se muestran no coinciden con el dominio de la dirección del remitente. Esto por sí solo no demuestra una suplantación.",
+    "reasonDeliveryDomain": "El dominio de envío o reenvío difiere del dominio del remitente. Un reenvío legítimo puede explicar esta diferencia.",
+    "reasonSignerDomain": "El dominio de firma indicado difiere del dominio del remitente. Esto por sí solo no demuestra una suplantación.",
+    "senderAddress": "Dirección del remitente",
+    "senderName": "Nombre mostrado del remitente",
+    "senderDomain": "Dominio del remitente",
+    "deliveryDomain": "Dominio de envío / reenvío",
+    "signerDomain": "Dominio de firma indicado",
+    "senderClaimsNote": "Los datos del remitente y de autenticación son información indicada, sin verificación independiente. Una dirección conocida no verifica el enlace.",
+    "senderLinkWarning": "Revisar enlaces",
+    "senderInfo": "Información del remitente",
+    "locateSender": "Ir al remitente",
+    "senderContext": "Contexto del remitente y los enlaces",
+    "privacySenderChecks": "También compara localmente, en este dispositivo, el nombre y la dirección mostrados del remitente con los dominios de envío y firma de los detalles que abres en Gmail."
   },
   "ar": {
     "description": "تحذيرات تصيد محلية لـ Gmail. فحص نص الرسالة وروابطها دون إرسال بريدك إلى خادم.",
@@ -998,7 +1128,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "الخصوصية",
     "coverage": "يشمل الفحص نص الرسالة وروابطها التي تستطيع الإضافة قراءتها. لا يتم التحقق من مصادقة البريد أو الصور أو رموز QR أو المرفقات أو صفحات الوجهة. غياب التحذير لا يضمن الأمان.",
     "scan": "فحص رسالة محليًا",
-    "scanHelp": "الصق رؤوس البريد الإلكتروني أو الرسالة كاملة، أو اختر ملف ‎.eml أو ‎.txt لتحليله باستخدام القواعد نفسها التي يستخدمها MailContext Guard للفحص التلقائي في Gmail. يُعالَج المحتوى على جهازك فقط، ولا يُرسَل إلى أي جهة خارجية ولا يُحفَظ (بحد أقصى 5 MB).",
+    "scanHelp": "الصق رؤوس البريد الإلكتروني أو الرسالة كاملة، أو اختر ملف ‎.eml أو ‎.txt لتحليله باستخدام القواعد نفسها التي يستخدمها Mail Guard للفحص التلقائي في Gmail. يُعالَج المحتوى على جهازك فقط، ولا يُرسَل إلى أي جهة خارجية ولا يُحفَظ (بحد أقصى 5 MB).",
     "choose": "اختر ‎.eml أو ‎.txt",
     "analyze": "فحص الرسالة",
     "clear": "مسح",
@@ -1044,7 +1174,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "نوع رابط غير مدعوم. لن تفتح الإضافة هذا الرابط.",
     "reasonForward": "تحتوي رؤوس الرسالة على علامات تشير إلى إعادة توجيهها. إعادة التوجيه وحدها لا تدل على خطر.",
     "reasonReply": "يختلف نطاق عنوان الرد عن نطاق المرسل. هذا الاختلاف وحده لا يدل على خطر.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "تم فحص جزء فقط من المحتوى بسبب قيود الحجم أو التنسيق أو التحليل.",
     "unavailable": "لا يوجد نص رسالة قابل للقراءة. قد تتوفر معلومات الرؤوس.",
     "settingsHelp": "اختر لغة العرض وما الذي تعرضه الإضافة أثناء فحص Gmail.",
@@ -1089,7 +1219,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "أدخل كلمة المرور لحسابك في Google:",
     "settingsError": "تعذرت قراءة الإعدادات أو حفظها. حاول مرة أخرى.",
     "fileNone": "لم يتم اختيار ملف",
-    "fileSelected": "الملف المحدد: {name}"
+    "fileSelected": "الملف المحدد: {name}",
+    "reasonCount": "الأسباب: {n}",
+    "groupReasonCount": "الروابط: {groups} · الأسباب: {reasons}",
+    "reasonSenderName": "لا يتطابق اسم المرسل أو عنوانه المعروض مع نطاق عنوان المرسل. هذا وحده لا يثبت انتحال الهوية.",
+    "reasonDeliveryDomain": "يختلف نطاق الإرسال أو إعادة التوجيه عن نطاق المرسل. قد يكون السبب إعادة توجيه مشروعة.",
+    "reasonSignerDomain": "يختلف نطاق التوقيع المذكور عن نطاق المرسل. هذا وحده لا يثبت انتحال الهوية.",
+    "senderAddress": "عنوان المرسل",
+    "senderName": "اسم المرسل المعروض",
+    "senderDomain": "نطاق المرسل",
+    "deliveryDomain": "نطاق الإرسال / إعادة التوجيه",
+    "signerDomain": "نطاق التوقيع المذكور",
+    "senderClaimsNote": "تفاصيل المرسل والمصادقة هي معلومات مذكورة لم يتم التحقق منها بشكل مستقل. العنوان المألوف لا يثبت سلامة الرابط.",
+    "senderLinkWarning": "تحقق من الروابط",
+    "senderInfo": "معلومات المرسل",
+    "locateSender": "الانتقال إلى المرسل",
+    "senderContext": "سياق المرسل والروابط",
+    "privacySenderChecks": "يقارن أيضًا على هذا الجهاز اسم المرسل وعنوانه المعروضين بنطاقات الإرسال والتوقيع الواردة في تفاصيل Gmail التي تفتحها."
   },
   "pt_BR": {
     "description": "Alertas locais de phishing no Gmail. Verifique o texto e os links sem enviar seus e-mails a um servidor.",
@@ -1105,7 +1251,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privacidade",
     "coverage": "A verificação abrange o texto e os links do e-mail que a extensão pode ler. Autenticação do e-mail, imagens, códigos QR, anexos e páginas de destino não são verificados. A ausência de avisos não garante segurança.",
     "scan": "Verificação local de e-mail",
-    "scanHelp": "Cole os cabeçalhos ou um e-mail completo, ou escolha um arquivo .eml ou .txt, para analisá-lo com as mesmas regras das verificações automáticas do MailContext Guard no Gmail. O conteúdo é processado apenas no seu dispositivo, sem ser enviado para fora ou salvo (até 5 MB).",
+    "scanHelp": "Cole os cabeçalhos ou um e-mail completo, ou escolha um arquivo .eml ou .txt, para analisá-lo com as mesmas regras das verificações automáticas do Mail Guard no Gmail. O conteúdo é processado apenas no seu dispositivo, sem ser enviado para fora ou salvo (até 5 MB).",
     "choose": "Escolher .eml ou .txt",
     "analyze": "Verificar e-mail",
     "clear": "Limpar",
@@ -1151,7 +1297,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Tipo de link não compatível. A extensão não abre este link.",
     "reasonForward": "Os cabeçalhos contêm indícios de encaminhamento. O encaminhamento, por si só, não indica perigo.",
     "reasonReply": "Os domínios do endereço de resposta e do remetente são diferentes. Essa diferença, por si só, não indica perigo.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Apenas parte do conteúdo foi verificada devido a limites de tamanho, formato ou análise.",
     "unavailable": "Não há corpo de mensagem legível. Informações dos cabeçalhos podem estar disponíveis.",
     "settingsHelp": "Escolha o idioma e o que a extensão mostra ao verificar o Gmail.",
@@ -1196,7 +1342,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Digite sua senha do Google:",
     "settingsError": "Não foi possível ler ou salvar as configurações. Tente novamente.",
     "fileNone": "Nenhum arquivo selecionado",
-    "fileSelected": "Arquivo selecionado: {name}"
+    "fileSelected": "Arquivo selecionado: {name}",
+    "reasonCount": "Motivos: {n}",
+    "groupReasonCount": "Links: {groups} · motivos: {reasons}",
+    "reasonSenderName": "O nome ou endereço exibido do remetente não corresponde ao domínio do endereço do remetente. Isso, por si só, não comprova falsificação de identidade.",
+    "reasonDeliveryDomain": "O domínio de envio ou encaminhamento difere do domínio do remetente. Um encaminhamento legítimo pode explicar essa diferença.",
+    "reasonSignerDomain": "O domínio de assinatura informado difere do domínio do remetente. Isso, por si só, não comprova falsificação de identidade.",
+    "senderAddress": "Endereço do remetente",
+    "senderName": "Nome exibido do remetente",
+    "senderDomain": "Domínio do remetente",
+    "deliveryDomain": "Domínio de envio / encaminhamento",
+    "signerDomain": "Domínio de assinatura informado",
+    "senderClaimsNote": "Os detalhes do remetente e da autenticação são informações declaradas, sem verificação independente. Um endereço conhecido não comprova a segurança do link.",
+    "senderLinkWarning": "Verificar links",
+    "senderInfo": "Informações do remetente",
+    "locateSender": "Ir ao remetente",
+    "senderContext": "Contexto do remetente e dos links",
+    "privacySenderChecks": "Também compara, localmente neste dispositivo, o nome e o endereço exibidos do remetente com os domínios de envio e assinatura dos detalhes que você abre no Gmail."
   },
   "fr": {
     "description": "Alertes de hameçonnage locales pour Gmail. Vérifiez le texte et les liens sans envoyer vos e-mails à un serveur.",
@@ -1212,7 +1374,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Confidentialité",
     "coverage": "La vérification porte sur le texte et les liens du message que l’extension peut lire. L’authentification des e-mails, les images, les codes QR, les pièces jointes et les pages de destination ne sont pas vérifiés. L’absence d’avertissement ne garantit pas la sécurité.",
     "scan": "Vérification locale des e-mails",
-    "scanHelp": "Collez les en-têtes ou un e-mail complet, ou choisissez un fichier .eml ou .txt, pour l’analyser selon les mêmes règles que les vérifications automatiques de MailContext Guard dans Gmail. Le contenu est traité uniquement sur votre appareil, sans être envoyé ailleurs ni enregistré (5 MB maximum).",
+    "scanHelp": "Collez les en-têtes ou un e-mail complet, ou choisissez un fichier .eml ou .txt, pour l’analyser selon les mêmes règles que les vérifications automatiques de Mail Guard dans Gmail. Le contenu est traité uniquement sur votre appareil, sans être envoyé ailleurs ni enregistré (5 MB maximum).",
     "choose": "Choisir .eml ou .txt",
     "analyze": "Vérifier le message",
     "clear": "Effacer",
@@ -1258,7 +1420,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Type de lien non pris en charge. L’extension n’ouvre pas ce lien.",
     "reasonForward": "Les en-têtes contiennent des indices de transfert du message. Un transfert ne constitue pas à lui seul un signe de danger.",
     "reasonReply": "Le domaine de l’adresse de réponse diffère de celui de l’expéditeur. Cette différence ne constitue pas à elle seule un signe de danger.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Seule une partie du contenu a été examinée en raison de limites de taille, de format ou d’analyse.",
     "unavailable": "Aucun corps de message lisible. Des informations d’en-tête peuvent être disponibles.",
     "settingsHelp": "Choisissez la langue et ce que l’extension affiche lors des vérifications Gmail.",
@@ -1303,7 +1465,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Saisissez votre mot de passe Google :",
     "settingsError": "Impossible de lire ou d’enregistrer les paramètres. Réessayez.",
     "fileNone": "Aucun fichier sélectionné",
-    "fileSelected": "Fichier sélectionné : {name}"
+    "fileSelected": "Fichier sélectionné : {name}",
+    "reasonCount": "Motifs : {n}",
+    "groupReasonCount": "Liens : {groups} · motifs : {reasons}",
+    "reasonSenderName": "Le nom ou l’adresse affichés ne correspondent pas au domaine de l’adresse de l’expéditeur. Cela ne suffit pas à établir une usurpation d’identité.",
+    "reasonDeliveryDomain": "Le domaine d’envoi ou de transfert diffère de celui de l’expéditeur. Un transfert légitime peut expliquer cette différence.",
+    "reasonSignerDomain": "Le domaine de signature indiqué diffère de celui de l’expéditeur. Cela ne suffit pas à établir une usurpation d’identité.",
+    "senderAddress": "Adresse de l’expéditeur",
+    "senderName": "Nom affiché de l’expéditeur",
+    "senderDomain": "Domaine de l’expéditeur",
+    "deliveryDomain": "Domaine d’envoi / de transfert",
+    "signerDomain": "Domaine de signature indiqué",
+    "senderClaimsNote": "Les détails sur l’expéditeur et l’authentification sont des informations déclarées, sans vérification indépendante. Une adresse familière ne garantit pas la sécurité du lien.",
+    "senderLinkWarning": "Vérifier les liens",
+    "senderInfo": "Informations sur l’expéditeur",
+    "locateSender": "Aller à l’expéditeur",
+    "senderContext": "Contexte de l’expéditeur et des liens",
+    "privacySenderChecks": "Compare aussi, localement sur cet appareil, le nom et l’adresse affichés de l’expéditeur avec les domaines d’envoi et de signature figurant dans les détails que vous ouvrez dans Gmail."
   },
   "ru": {
     "description": "Локальные предупреждения о фишинге в Gmail. Проверка текста и ссылок без отправки писем на сервер.",
@@ -1319,7 +1497,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Конфиденциальность",
     "coverage": "Проверяются текст и ссылки письма, доступные расширению. Аутентификация письма, изображения, QR-коды, вложения и страницы по ссылкам не проверяются. Отсутствие предупреждений не гарантирует безопасность.",
     "scan": "Локальная проверка письма",
-    "scanHelp": "Вставьте заголовки или письмо целиком либо выберите файл .eml или .txt для анализа по тем же правилам, что и при автоматической проверке MailContext Guard в Gmail. Содержимое обрабатывается только на вашем устройстве, никуда не отправляется и не сохраняется (до 5 MB).",
+    "scanHelp": "Вставьте заголовки или письмо целиком либо выберите файл .eml или .txt для анализа по тем же правилам, что и при автоматической проверке Mail Guard в Gmail. Содержимое обрабатывается только на вашем устройстве, никуда не отправляется и не сохраняется (до 5 MB).",
     "choose": "Выбрать .eml или .txt",
     "analyze": "Проверить письмо",
     "clear": "Очистить",
@@ -1365,7 +1543,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Неподдерживаемый тип ссылки. Расширение не открывает её.",
     "reasonForward": "В заголовках есть признаки пересылки. Пересылка сама по себе не указывает на опасность.",
     "reasonReply": "Домен адреса для ответа отличается от домена отправителя. Само по себе это различие не указывает на опасность.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Проверена только часть содержимого из-за ограничений размера, формата или анализа.",
     "unavailable": "Нет читаемого текста письма. Сведения о заголовках могут быть доступны.",
     "settingsHelp": "Выберите язык интерфейса и то, какие уведомления расширение показывает в Gmail.",
@@ -1410,7 +1588,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Введите пароль от аккаунта Google:",
     "settingsError": "Не удалось прочитать или сохранить настройки. Повторите попытку.",
     "fileNone": "Файл не выбран",
-    "fileSelected": "Выбранный файл: {name}"
+    "fileSelected": "Выбранный файл: {name}",
+    "reasonCount": "Причин: {n}",
+    "groupReasonCount": "Ссылок: {groups} · причин: {reasons}",
+    "reasonSenderName": "Отображаемое имя или адрес отправителя не соответствует домену адреса отправителя. Само по себе это не доказывает подмену личности.",
+    "reasonDeliveryDomain": "Домен отправки или пересылки отличается от домена отправителя. Это может быть связано с обычной пересылкой.",
+    "reasonSignerDomain": "Указанный домен подписи отличается от домена отправителя. Само по себе это не доказывает подмену личности.",
+    "senderAddress": "Адрес отправителя",
+    "senderName": "Отображаемое имя отправителя",
+    "senderDomain": "Домен отправителя",
+    "deliveryDomain": "Домен отправки / пересылки",
+    "signerDomain": "Указанный домен подписи",
+    "senderClaimsNote": "Сведения об отправителе и аутентификации приведены по имеющимся данным и не проверены независимо. Знакомый адрес не подтверждает безопасность ссылки.",
+    "senderLinkWarning": "Проверить ссылки",
+    "senderInfo": "Сведения об отправителе",
+    "locateSender": "Перейти к отправителю",
+    "senderContext": "Контекст отправителя и ссылок",
+    "privacySenderChecks": "Также локально на этом устройстве сравнивает отображаемые имя и адрес отправителя с доменами отправки и подписи из подробных сведений, которые вы открываете в Gmail."
   },
   "de": {
     "description": "Lokale Phishing-Warnungen für Gmail. Prüft Text und Links, ohne Ihre E-Mails an einen Server zu senden.",
@@ -1426,7 +1620,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Datenschutz",
     "coverage": "Geprüft werden der Nachrichtentext und die Links, die die Erweiterung lesen kann. E-Mail-Authentifizierung, Bilder, QR-Codes, Anhänge und Zielseiten werden nicht verifiziert. Das Fehlen einer Warnung garantiert keine Sicherheit.",
     "scan": "Lokale E-Mail-Prüfung",
-    "scanHelp": "Fügen Sie E-Mail-Header oder eine vollständige E-Mail ein oder wählen Sie eine .eml- oder .txt-Datei, um sie nach denselben Regeln wie bei den automatischen Prüfungen von MailContext Guard in Gmail zu analysieren. Der Inhalt wird nur auf Ihrem Gerät verarbeitet, nicht nach außen gesendet und nicht gespeichert (bis 5 MB).",
+    "scanHelp": "Fügen Sie E-Mail-Header oder eine vollständige E-Mail ein oder wählen Sie eine .eml- oder .txt-Datei, um sie nach denselben Regeln wie bei den automatischen Prüfungen von Mail Guard in Gmail zu analysieren. Der Inhalt wird nur auf Ihrem Gerät verarbeitet, nicht nach außen gesendet und nicht gespeichert (bis 5 MB).",
     "choose": ".eml oder .txt auswählen",
     "analyze": "E-Mail prüfen",
     "clear": "Löschen",
@@ -1472,7 +1666,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Nicht unterstützter Linktyp. Die Erweiterung öffnet diesen Link nicht.",
     "reasonForward": "Die Header enthalten Hinweise auf eine Weiterleitung. Eine Weiterleitung allein weist nicht auf eine Gefahr hin.",
     "reasonReply": "Die Domain der Antwortadresse unterscheidet sich von der Absenderdomain. Dieser Unterschied allein weist nicht auf eine Gefahr hin.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Nur ein Teil konnte wegen Größen-, Format- oder Analysegrenzen geprüft werden.",
     "unavailable": "Kein lesbarer Nachrichtentext vorhanden. Header-Informationen können verfügbar sein.",
     "settingsHelp": "Wählen Sie die Anzeigesprache und welche Hinweise die Erweiterung bei Gmail zeigt.",
@@ -1517,7 +1711,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Geben Sie Ihr Google-Passwort ein:",
     "settingsError": "Die Einstellungen konnten nicht gelesen oder gespeichert werden. Versuchen Sie es erneut.",
     "fileNone": "Keine Datei ausgewählt",
-    "fileSelected": "Ausgewählte Datei: {name}"
+    "fileSelected": "Ausgewählte Datei: {name}",
+    "reasonCount": "Hinweise: {n}",
+    "groupReasonCount": "Links: {groups} · Hinweise: {reasons}",
+    "reasonSenderName": "Der angezeigte Absendername oder die angezeigte Adresse passt nicht zur Domain der Absenderadresse. Das allein belegt keine Identitätstäuschung.",
+    "reasonDeliveryDomain": "Die Versand- oder Weiterleitungsdomain weicht von der Absenderdomain ab. Eine legitime Weiterleitung kann dies erklären.",
+    "reasonSignerDomain": "Die angegebene Signaturdomain weicht von der Absenderdomain ab. Das allein belegt keine Identitätstäuschung.",
+    "senderAddress": "Absenderadresse",
+    "senderName": "Angezeigter Absendername",
+    "senderDomain": "Absenderdomain",
+    "deliveryDomain": "Versand- / Weiterleitungsdomain",
+    "signerDomain": "Angegebene Signaturdomain",
+    "senderClaimsNote": "Die Angaben zu Absender und Authentifizierung wurden nicht unabhängig überprüft. Eine vertraute Adresse bestätigt nicht die Sicherheit des Links.",
+    "senderLinkWarning": "Links prüfen",
+    "senderInfo": "Absenderinfos",
+    "locateSender": "Zum Absender",
+    "senderContext": "Kontext zu Absender und Links",
+    "privacySenderChecks": "Vergleicht außerdem lokal auf diesem Gerät den angezeigten Absendernamen und die Absenderadresse mit den Versand- und Signaturdomains aus den von Ihnen geöffneten Gmail-Details."
   },
   "id": {
     "description": "Peringatan phishing lokal untuk Gmail. Periksa teks dan tautan tanpa mengirim email ke server.",
@@ -1533,7 +1743,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "Privasi",
     "coverage": "Pemeriksaan mencakup teks dan tautan email yang dapat dibaca oleh ekstensi. Autentikasi email, gambar, kode QR, lampiran, dan halaman tujuan tidak diverifikasi. Tidak adanya peringatan bukan jaminan keamanan.",
     "scan": "Pemeriksaan email lokal",
-    "scanHelp": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis MailContext Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB).",
+    "scanHelp": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis Mail Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB).",
     "choose": "Pilih .eml atau .txt",
     "analyze": "Periksa email",
     "clear": "Hapus",
@@ -1579,7 +1789,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "Jenis tautan tidak didukung. Ekstensi tidak akan membukanya.",
     "reasonForward": "Header menunjukkan tanda penerusan email. Penerusan saja tidak menunjukkan bahaya.",
     "reasonReply": "Domain alamat balasan dan pengirim berbeda. Perbedaan ini saja tidak menunjukkan bahaya.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "Hanya sebagian isi yang diperiksa karena batas ukuran, format, atau penguraian.",
     "unavailable": "Tidak ada isi pesan yang dapat dibaca. Informasi header mungkin tersedia.",
     "settingsHelp": "Pilih bahasa tampilan dan informasi apa yang ditampilkan ekstensi saat memeriksa Gmail.",
@@ -1624,7 +1834,23 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Masukkan kata sandi akun Google Anda:",
     "settingsError": "Tidak dapat membaca atau menyimpan setelan. Coba lagi.",
     "fileNone": "Belum ada file yang dipilih",
-    "fileSelected": "File yang dipilih: {name}"
+    "fileSelected": "File yang dipilih: {name}",
+    "reasonCount": "Alasan: {n}",
+    "groupReasonCount": "Tautan: {groups} · alasan: {reasons}",
+    "reasonSenderName": "Nama atau alamat pengirim yang ditampilkan tidak sesuai dengan domain alamat pengirim. Hal ini saja tidak membuktikan pemalsuan identitas.",
+    "reasonDeliveryDomain": "Domain pengiriman atau penerusan berbeda dari domain pengirim. Penerusan yang sah dapat menjelaskan perbedaan ini.",
+    "reasonSignerDomain": "Domain tanda tangan yang tercantum berbeda dari domain pengirim. Hal ini saja tidak membuktikan pemalsuan identitas.",
+    "senderAddress": "Alamat pengirim",
+    "senderName": "Nama pengirim yang ditampilkan",
+    "senderDomain": "Domain pengirim",
+    "deliveryDomain": "Domain pengiriman / penerusan",
+    "signerDomain": "Domain tanda tangan yang tercantum",
+    "senderClaimsNote": "Detail pengirim dan autentikasi merupakan informasi yang tercantum, tanpa verifikasi independen. Alamat yang dikenal tidak membuktikan keamanan tautan.",
+    "senderLinkWarning": "Periksa tautan",
+    "senderInfo": "Info pengirim",
+    "locateSender": "Ke pengirim",
+    "senderContext": "Konteks pengirim dan tautan",
+    "privacySenderChecks": "Juga membandingkan nama dan alamat pengirim yang ditampilkan dengan domain pengiriman dan tanda tangan dari detail Gmail yang Anda buka, secara lokal di perangkat ini."
   },
   "ko": {
     "description": "Gmail 이메일의 문맥과 링크를 기기에서 확인해 피싱 위험 징후를 알려 줍니다. 이메일은 서버로 전송하지 않습니다.",
@@ -1640,7 +1866,7 @@ globalThis.MCG.LOCALES = {
     "privacy": "개인정보 보호",
     "coverage": "확장 프로그램이 읽을 수 있는 메시지의 텍스트와 링크를 검사합니다. 이메일 인증 여부, 이미지, QR 코드, 첨부파일, 링크의 목적지 페이지는 검증하지 않습니다. 경고가 없다고 해서 안전이 보장되지는 않습니다.",
     "scan": "기기 내 메시지 검사",
-    "scanHelp": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 MailContext Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB).",
+    "scanHelp": "이메일 헤더나 전체 이메일을 붙여넣거나 .eml 또는 .txt 파일을 선택하면 Gmail 자동 검사와 동일한 Mail Guard 규칙으로 분석합니다. 내용은 이 기기에서만 처리되며 외부로 전송되거나 저장되지 않습니다(최대 5 MB).",
     "choose": ".eml 또는 .txt 파일 선택",
     "analyze": "메시지 검사",
     "clear": "지우기",
@@ -1686,7 +1912,7 @@ globalThis.MCG.LOCALES = {
     "reasonScheme": "지원하지 않는 링크 유형입니다. 확장 프로그램은 이 링크로 이동하지 않습니다.",
     "reasonForward": "헤더에 전달된 이메일에서 볼 수 있는 징후가 있습니다. 전달 사실만으로 위험하다고 판단하지 않습니다.",
     "reasonReply": "회신 주소와 발신자 주소의 도메인이 다릅니다. 이 차이만으로 위험하다고 판단하지 않습니다.",
-    "name": "MailContext Guard",
+    "name": "Mail Guard",
     "partial": "입력 내용의 일부만 검사했습니다. 크기, 형식 또는 분석 한계로 검사하지 못한 내용이 있습니다.",
     "unavailable": "읽을 수 있는 메시지 본문이 없어 검사할 수 없습니다. 헤더 정보는 제공될 수 있습니다.",
     "settingsHelp": "Gmail을 검사할 때 사용할 표시 언어와 확장 프로그램이 보여 줄 정보를 선택해 주세요.",
@@ -1731,10 +1957,28 @@ globalThis.MCG.LOCALES = {
     "sampleBody": "Google 비밀번호를 입력해 주세요:",
     "settingsError": "설정을 읽거나 저장할 수 없습니다. 다시 시도해 주세요.",
     "fileNone": "선택된 파일 없음",
-    "fileSelected": "선택된 파일: {name}"
+    "fileSelected": "선택된 파일: {name}",
+    "reasonCount": "주의 사항 {n}개",
+    "groupReasonCount": "링크 {groups}개 · 주의 사항 {reasons}개",
+    "reasonSenderName": "표시된 발신자 이름 또는 주소가 발신자 주소의 도메인과 일치하지 않습니다. 이 차이만으로 사칭이라고 판단할 수는 없습니다.",
+    "reasonDeliveryDomain": "발송 또는 전달 도메인이 발신자 도메인과 다릅니다. 정상적인 메일 전달 과정에서도 발생할 수 있습니다.",
+    "reasonSignerDomain": "표시된 서명 도메인이 발신자 도메인과 다릅니다. 이 차이만으로 사칭이라고 판단할 수는 없습니다.",
+    "senderAddress": "발신자 주소",
+    "senderName": "표시된 발신자 이름",
+    "senderDomain": "발신자 도메인",
+    "deliveryDomain": "발송 / 전달 도메인",
+    "signerDomain": "표시된 서명 도메인",
+    "senderClaimsNote": "발신자 및 인증 세부 정보는 제공된 내용이며, 별도로 검증되지 않았습니다. 익숙한 주소라고 해서 링크의 안전성이 확인되는 것은 아닙니다.",
+    "senderLinkWarning": "링크 확인",
+    "senderInfo": "발신자 정보",
+    "locateSender": "발신자로 이동",
+    "senderContext": "발신자 및 링크 관련 정보",
+    "privacySenderChecks": "표시된 발신자 이름·주소와 사용자가 Gmail에서 연 세부 정보의 발송·서명 도메인도 이 기기에서 로컬로 비교합니다."
   }
 }
 ;
+
+globalThis.MCG.GMAIL_DETAIL_LABELS = {"en":{"mailedBy":["mailed-by","Mailed by"],"signedBy":["signed-by","Signed by"]},"ja":{"mailedBy":["送信元"],"signedBy":["署名元"]},"zh_CN":{"mailedBy":[],"signedBy":["签名者"]},"es":{"mailedBy":["enviado por"],"signedBy":["firmado por"]},"ar":{"mailedBy":["مُرسلة بواسطة"],"signedBy":["مُوقعة بواسطة"]},"pt_BR":{"mailedBy":["Enviado por"],"signedBy":["Assinado por"]},"fr":{"mailedBy":["Envoyé par"],"signedBy":["Signé par"]},"ru":{"mailedBy":["отправлено через"],"signedBy":["подписано"]},"de":{"mailedBy":["Mailed by"],"signedBy":["Signed by"]},"id":{"mailedBy":["Dikirim oleh"],"signedBy":["Ditandatangani oleh"]},"ko":{"mailedBy":["발송 도메인"],"signedBy":["인증기관"]}};
 
 globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128","height":"128","rx":"29","fill":"#173e45"}],["path",{"d":"M64 21 103 35V66c0 23-22 39-39 47-17-8-39-24-39-47V35Z","fill":"#bfe5d4"}],["path",{"d":"M40 48h48v33H40z","fill":"#173e45"}],["path",{"d":"m40 49 24 19 24-19","fill":"none","stroke":"#bfe5d4","stroke-width":"5","stroke-linejoin":"round"}],["circle",{"cx":"93","cy":"88","r":"20","fill":"#f2ba5e","stroke":"#173e45","stroke-width":"5"}],["path",{"d":"M93 77v12","stroke":"#173e45","stroke-width":"5","stroke-linecap":"round"}],["circle",{"cx":"93","cy":"97","r":"2.6","fill":"#173e45"}]]};
 (() => {
@@ -1791,10 +2035,29 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
   }});
   return [...categories.values()].sort((a,b)=>M.LEVELS.indexOf(b.finding.level)-M.LEVELS.indexOf(a.finding.level));
  };
- M.summaryGroups=result=>M.warningCategories(result).flatMap(c=>c.pairs.length?c.pairs:[{finding:c.finding,link:null,positions:[]}]);
+ // 1.0.8: one exact displayed-text/destination item, with all its reasons.
+ // Never normalize, decode, sort queries, or reduce destinations to hostnames.
+ // At parser bounds equivalence is unknown: retain separate occurrence groups.
+ M.warningGroups=result=>{
+  const groups=new Map(),rank=f=>M.LEVELS.indexOf(f.level);
+  const addFinding=(group,f,link)=>{const existing=group.findings.find(x=>x.reason===f.reason);if(!existing)group.findings.push(f);else if(rank(f)>rank(existing))group.findings[group.findings.indexOf(existing)]=f;
+   if(!group.finding||rank(f)>rank(group.finding)){group.finding=f;group.link=link;}};
+  (result.links||[]).forEach((link,index)=>{
+   if(!link.findings?.length)return;const raw=link.info.raw??link.info.url??'',shown=link.info.shownText||'';
+   const bounded=link.info.partial||raw.length>=M.LIMIT.url||shown.length>=500;
+   const key=JSON.stringify(['link',raw,shown,...(bounded?[index]:[])]);
+   let group=groups.get(key);if(!group){group={key,link,finding:null,findings:[],level:'NO_FINDINGS',positions:[],occurrences:[],urls:[]};groups.set(key,group);}
+   const occurrence={link,position:index+1};group.positions.push(index+1);group.occurrences.push(occurrence);
+   for(const f of link.findings)addFinding(group,f,link);
+  });
+  for(const f of result.findings||[]){const key=JSON.stringify(f.senderEvidence?['sender',f.senderEvidence.address||'',f.senderEvidence.provenance]:['overall',f.reason]);let group=groups.get(key);if(!group){group={key,link:null,finding:null,findings:[],level:'NO_FINDINGS',positions:[],occurrences:[],urls:[]};groups.set(key,group);}if(f.senderEvidence)group.senderEvidence=f.senderEvidence;addFinding(group,f,null);}
+  for(const group of groups.values()){group.findings.sort((a,b)=>rank(b)-rank(a));group.level=M.maxLevel(...group.findings.map(f=>f.level));if(group.link)group.urls=[{raw:group.link.info.raw??group.link.info.url??'',occurrences:group.occurrences}];}
+  return [...groups.values()].sort((a,b)=>rank(b.finding)-rank(a.finding));
+ };
+ M.summaryGroups=result=>M.warningGroups(result);
  M.leadingFinding=result=>M.summaryGroups(result)[0]?.finding;
  M.summaryEvidence=entry=>{
-  const link=entry?.link;if(!link)return {facts:[],relation:false};const info=link.info,reason=entry.finding.reason;
+  const link=entry?.link;if(!link){const e=entry?.senderEvidence||entry?.finding?.senderEvidence;if(!e)return {facts:[],relation:false};const f=(key,value)=>({label:M.t(key),value:M.clean(value||''),kind:key==='senderName'?'text':'host'});const reason=entry.finding.reason;const facts=reason==='reasonDeliveryDomain'?[f('senderDomain',e.fromDomain||e.domain),f('deliveryDomain',e.deliveryDomain)]:reason==='reasonSignerDomain'?[f('senderDomain',e.fromDomain||e.domain),f('signerDomain',(e.signatureDomains||[]).join(', '))]:[f('senderName',e.displayName),f('senderAddress',e.address)];return {facts:facts.filter(x=>x.value),relation:true};}const info=link.info,reason=entry.finding.reason;
   const fact=(key,value,kind='text')=>({label:M.t(key),value:M.clean(value||''),kind});
   const actual=()=>fact('actualHost',info.host,'host');let facts=[],relation=false;
   if(reason==='reasonMismatch'&&info.displayHost&&info.host){facts=[fact('shownHost',info.displayHost,'host'),actual()];relation=true;}
@@ -1808,13 +2071,15 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
   }else if(reason==='reasonScheme'){facts=[fact('destinationType',/^[a-z][a-z0-9+.-]*:/i.exec(info.raw||'')?.[0]||M.t('unknown'))];}
   else if(reason==='reasonUnparsed'){facts=info.host?[actual()]:[fact('linkInput',M.clip(info.raw||info.shownText||'',120)+(Math.max((info.raw||'').length,(info.shownText||'').length)>120?'…':''))];}
   else if(info.host)facts=[actual()];
+  if(['reasonAccount','reasonSecret','reasonSpoof','reasonLookalike','reasonUnknown'].includes(reason)&&link.senderEvidence?.address)facts.push(fact('senderAddress',link.senderEvidence.address));
   return {facts:facts.filter(f=>f.value),relation};
  };
- M.summaryModel=result=>{const groups=M.summaryGroups(result),leading=groups[0];return {leading,reason:leading?M.t(leading.finding.reason):result.state==='PARTIAL'?M.t('partial'):result.state==='UNAVAILABLE'?M.t('unavailable'):'',evidence:M.summaryEvidence(leading),otherCount:Math.max(0,groups.length-1),groupCount:groups.length,linkCount:new Set(groups.flatMap(g=>g.positions)).size};};
+ M.summaryModel=result=>{const groups=M.summaryGroups(result),leading=groups[0];return {leading,reason:leading?M.t(leading.finding.reason):result.state==='PARTIAL'?M.t('partial'):result.state==='UNAVAILABLE'?M.t('unavailable'):'',evidence:M.summaryEvidence(leading),otherCount:Math.max(0,groups.length-1),groupCount:groups.length,linkGroupCount:groups.filter(g=>g.link).length,reasonCount:groups.reduce((n,g)=>n+g.findings.length,0),linkCount:new Set(groups.flatMap(g=>g.positions)).size};};
  M.renderSummaryEvidence=evidence=>{const row=M.el('span','',{class:'summary-evidence'});evidence.facts.forEach((fact,i)=>{if(i)row.append(M.el('span',evidence.relation?'→':'·',{class:'relation-separator','aria-hidden':'true',dir:'ltr'}));const part=M.el('span','',{class:'evidence-fact'});part.append(M.el('span',fact.label+': ',{class:'evidence-label'}),M.el('bdi',fact.value,{class:fact.kind==='host'?'evidence-value summary-host':'evidence-value',dir:fact.kind==='host'?'ltr':'auto'}));row.append(part);});return row;};
  M.resultLabel=result=>result.state==='PARTIAL'||result.state==='UNAVAILABLE'?M.t('unknown')+(M.LEVELS.indexOf(result.level)>=3?' · '+M.t(result.level):''):M.t(result.level);
  M.evidenceFacts=link=>{
   const facts=[M.fact(M.t('target'),M.clean(link.info.raw||link.info.url||''))];
+  if(link.senderEvidence?.address&&link.findings.some(f=>['W01','H01','H02','W03','C04'].includes(f.id)))facts.unshift(M.fact(M.t('senderAddress'),M.clean(link.senderEvidence.address)));
   if(link.info.shownText)facts.push(M.fact(M.t('linkText'),M.clean(link.info.shownText)));
   if(link.info.unicodeHost&&link.info.unicodeHost!==link.info.host)facts.push(M.fact(M.t('actualHost'),M.clean(link.info.unicodeHost)));
   if(link.occurrence?.context)facts.push(M.fact(M.t('context'),M.clean(link.occurrence.context).replace(/\r\n?/g,'\n').replace(/\n[ \t]*\n(?:[ \t]*\n)+/g,'\n\n').trim()));
@@ -1828,28 +2093,39 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
  M.appendReasons=(parent,result,options={})=>{
   if(result.state==='PARTIAL')parent.append(M.el('p',M.t('partial'),{class:'note'}));
   if(result.state==='UNAVAILABLE')parent.append(M.el('p',M.t('unavailable'),{class:'note'}));
-  const categories=M.warningCategories(result),singlePair=M.summaryGroups(result).length===1;
-  for(const category of categories){
-   const section=M.el('section','',{class:'warning-category'});
-   if(!(options.summaryVisible&&categories.length===1))section.append(M.el('h3',M.t(category.finding.reason),{class:'finding category-title'}));
-   for(const pair of category.pairs){
-    const multiplePairs=category.pairs.length>1,box=M.el(multiplePairs?'details':'section','',{class:'pair-group'});
-    box._findingKey=category.finding.id+pair.key;
-    if(multiplePairs){const summary=M.el('summary','');summary.append(M.renderSummaryEvidence(M.summaryEvidence(pair)),M.el('span',M.t('linkCount',{n:pair.positions.length}),{class:'note pair-count'}));box.append(summary);}
-    else if(!(options.summaryVisible&&singlePair))box.append(M.renderSummaryEvidence(M.summaryEvidence(pair)));
-    for(const url of pair.urls){
-     const multi=pair.urls.length>1,entry=M.el(multi?'details':'div','',{class:'url-entry evidence'});entry._findingKey=category.finding.id+pair.key+url.raw;
-     if(multi){const summary=M.el('summary','',{class:'url-summary'});summary.append(M.el('bdi',M.clean(url.raw),{dir:'ltr'}),M.el('span',M.t('occurrences',{n:url.occurrences.length}),{class:'note'}));entry.append(summary);}
-     // Keep context and displayed text for every occurrence, even when URLs repeat.
-     for(const occurrence of url.occurrences){const row=M.el('div','',{class:'occurrence'});row.append(M.renderFacts(M.evidenceFacts(occurrence.link)));
-      if(options.locate){const location=M.el('div','',{class:'occurrence-location'});const button=M.button('locateLink',()=>options.locate(occurrence.position,occurrence.link,button),'locate-link');button.dataset.position=String(occurrence.position);location.append(button);row.append(location);}
-      entry.append(row);
-     }
-     box.append(entry);
-    }
-    section.append(box);
+  const groups=M.warningGroups(result),multiple=groups.length>1;
+  for(const group of groups){
+   const section=M.el('section','',{class:'warning-category warning-group severity-'+group.level});
+   const box=M.el(multiple?'details':'section','',{class:'pair-group'});box._findingKey=group.key;
+   if(multiple){const summary=M.el('summary','',{class:'group-summary'});summary.append(M.status(group.level),M.renderSummaryEvidence(M.summaryEvidence(group)),M.el('span',M.t('reasonCount',{n:group.findings.length}),{class:'reason-count'}));
+    if(group.link)summary.append(M.el('bdi',M.clean(group.link.info.raw??group.link.info.url??''),{class:'group-destination',dir:'ltr'}));else summary.append(M.el('span',M.t(group.finding.reason),{class:'finding'}));box.append(summary);}
+   else if(!options.summaryVisible){const head=M.el('div','',{class:'group-heading'});head.append(M.renderSummaryEvidence(M.summaryEvidence(group)),M.el('span',M.t('reasonCount',{n:group.findings.length}),{class:'reason-count'}));box.append(head);}
+   const content=M.el('div','',{class:'group-content'});
+   if(!(options.summaryVisible&&!multiple&&group.findings.length===1)){
+    const list=M.el('ul','',{class:'finding-list reason-list','aria-label':M.t('reason')});
+    for(const f of group.findings){const item=M.el('li','',{class:'finding reason-item reason-'+f.level,'aria-label':M.t(f.level)+' · '+M.t(f.reason)});
+     item.append(M.el('span','',{class:'reason-dot','aria-hidden':'true'}),M.el('span',M.t(f.reason),{class:'reason-copy'}));list.append(item);}
+    content.append(list);
    }
-   parent.append(section);
+   if(group.senderEvidence){const e=group.senderEvidence,facts=[];for(const [key,value]of [['senderName',e.displayName],['senderAddress',e.address],['deliveryDomain',e.deliveryDomain],['signerDomain',(e.signatureDomains||[]).join(', ')]])if(value)facts.push(M.fact(M.t(key),M.clean(value)));content.append(M.renderFacts(facts),M.el('p',M.t('senderClaimsNote'),{class:'note sender-note'}));if(options.locateSender)content.append(M.button('locateSender',options.locateSender,'locate-link'));}
+   if(group.link){
+    const first=group.occurrences[0].link;
+    // These exact values are common to the group; show them once.
+    const shared=M.evidenceFacts(first).filter(f=>f.label!==M.t('context'));
+    content.append(M.renderFacts(shared));
+    const entry=M.el('div','',{class:'url-entry evidence'});entry._findingKey=group.key;
+    for(const occurrence of group.occurrences){
+     const row=M.el('div','',{class:'occurrence'});
+     // Preserve each original context, intent, evidence and location association.
+     const extra=M.linkFacts(occurrence.link).filter(f=>![M.t('shownHost'),M.t('actualHost'),M.t('destinationHost')].includes(f.label));
+     const context=M.evidenceFacts(occurrence.link).filter(f=>f.label===M.t('context'));
+     if(extra.length||context.length)row.append(M.renderFacts([...extra,...context]));
+     if(options.locate){const location=M.el('div','',{class:'occurrence-location'});const button=M.button('locateLink',()=>options.locate(occurrence.position,occurrence.link,button),'locate-link');button.dataset.position=String(occurrence.position);location.append(button);if(options.locateSender&&occurrence.link.senderEvidence?.address&&occurrence.link.findings.some(f=>['W01','H01','H02','W03','C04'].includes(f.id)))location.append(M.button('locateSender',options.locateSender,'locate-link'));row.append(location);}
+     entry.append(row);
+    }
+    content.append(entry);
+   }
+   box.append(content);section.append(box);parent.append(section);
   }
   if(result.header){const d=M.el('details','',{class:'header-details'});d.append(M.el('summary',M.t('headers')),M.el('p',M.t('headerNote'),{class:'note'}));
    for(const a of result.header.authClaims.slice(0,20))d.append(M.el('p',M.clean(`${a.method.toUpperCase()} = ${a.result} [${a.authservId}]`),{class:'mono'}));
@@ -1861,7 +2137,7 @@ globalThis.MCG.BRAND = {"viewBox":"0 0 128 128","nodes":[["rect",{"width":"128",
  M.translatePage=()=>{document.documentElement.lang=M.locale.replace('_','-');document.documentElement.dir=M.locale==='ar'?'rtl':'ltr';for(const e of document.querySelectorAll('[data-i18n]'))e.textContent=M.t(e.dataset.i18n);for(const e of document.querySelectorAll('[data-placeholder]'))e.placeholder=M.t(e.dataset.placeholder);};
 })();
 
-globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-scheme:light;--surface:#ffffff;--text:#0f172a;--muted:#475569;--line:#dce2e9;--soft:#f8fafc;--focus:#246b87;--warn:#92400e;--warn-bg:#fffbeb;--warn-line:#ead9aa;--risk:#a13a28;--risk-bg:#fff3ef;--risk-line:#efc7bc}\r\n*{box-sizing:border-box}button,summary{cursor:pointer}button{font:inherit;border:1px solid var(--line);border-radius:6px;padding:9px 13px;background:var(--surface);color:var(--text);font-weight:600}\r\nbutton:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}\r\n.wrap{font:13px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:6px;min-width:0}\r\n.wrap>summary{display:flex;gap:10px;align-items:flex-start;list-style:none;min-height:34px;padding:9px 11px}\r\nsummary::-webkit-details-marker{display:none}.brand-mark{display:block;width:24px;height:24px;flex:none}.summary-copy{display:grid;gap:4px;min-width:0;flex:1}.summary-heading{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.summary-title{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--soft);font-weight:650}.summary-reason{font-size:12px;overflow-wrap:anywhere;min-width:0}\r\n.wrap.CAUTION,.wrap.WARNING{border-color:var(--warn-line)}.wrap.HIGH_RISK{border-color:var(--risk-line)}.CAUTION .summary-title,.WARNING .summary-title{background:var(--warn-bg);color:var(--warn)}.HIGH_RISK .summary-title{background:var(--risk-bg);color:var(--risk)}\r\n.summary-evidence{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;min-width:0;font-size:13px;color:var(--text)}.evidence-fact{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:baseline;min-width:0;max-width:100%}.evidence-label{color:var(--muted);font-size:11px}.evidence-value{font-weight:650;white-space:normal;overflow-wrap:anywhere;min-width:0;max-width:100%;unicode-bidi:isolate}.summary-host{direction:ltr;unicode-bidi:isolate}.relation-separator{color:var(--muted)}.summary-actions{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:11px}.details-label:after{content:' +';font-weight:650}.wrap[open] .details-label:after{content:' −'}\r\n.wrap.quiet:not([open]){width:34px;margin-left:auto;background:var(--surface);color:var(--muted)}.quiet:not([open])>summary{padding:0;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px}.quiet:not([open]) .summary-copy{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}\r\n.body{padding:10px 12px;color:var(--text);background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 6px 6px;overflow-wrap:anywhere}\r\n.brand{font-weight:700;color:var(--text);font-size:13px}.note,.muted,.mono{font-size:12px;color:var(--muted)}.note{margin:10px 0 0}.badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;background:var(--soft);color:var(--text);font-size:11px;font-weight:650;max-width:100%;flex:none}.level-HIGH_RISK{background:var(--risk-bg);color:var(--risk)}.level-WARNING,.level-CAUTION{background:var(--warn-bg);color:var(--warn)}\r\n.link-card{padding:10px 0;border-bottom:1px solid var(--line)}.link-card:last-of-type{border-bottom:0}.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}.host{font-weight:650;overflow-wrap:anywhere;unicode-bidi:isolate;text-align:left;min-width:0}.mono{font-family:ui-monospace,monospace;overflow-wrap:anywhere}\r\n.facts{display:grid;grid-template-columns:minmax(90px,16%) minmax(0,1fr);gap:5px 12px;margin:10px 0}.fact-label{font-size:11px;color:var(--muted)}.fact-value{margin:0;font-size:12px;overflow-wrap:anywhere;white-space:pre-wrap;unicode-bidi:isolate}\r\n.finding-list{margin:5px 0;padding-inline-start:18px}.finding{margin:3px 0;color:var(--text)}.evidence{margin:6px 0 0}.evidence>summary,.header-details>summary{color:var(--muted);font-size:12px}.header-details{margin-top:10px}.coverage-note{border-top:1px solid var(--line);padding-top:9px}\r\ndialog{font:14px/1.6 system-ui,sans-serif;color:var(--text);border:1px solid var(--line);border-radius:10px;background:var(--surface);width:620px;max-width:calc(100vw - 32px);max-height:85vh;padding:22px;overflow:auto}dialog::backdrop{background:#14251f88}dialog h2{margin:0 0 12px;font-size:22px}dialog .buttons{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:20px}dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;text-align:left;background:var(--soft);padding:12px;border-radius:4px;font-size:12px}.danger{background:var(--risk);color:var(--surface);border-color:var(--risk)}\r\n@media(max-width:600px){.wrap>summary{gap:8px}.facts{grid-template-columns:1fr;gap:2px}.fact-value{margin-bottom:7px}.summary-heading{gap:4px 8px}}\r\n:host([data-theme=\"dark\"]){color-scheme:dark;--surface:#20242b;--text:#f1f5f9;--muted:#c0cad7;--line:#46505e;--soft:#2a303a;--focus:#8bc5e3;--warn:#ffd58a;--warn-bg:#3a3020;--warn-line:#746144;--risk:#ffc4b5;--risk-bg:#3d2d2a;--risk-line:#815b52}\r\n@media(forced-colors:active){.wrap,.body,button,dialog{border-color:CanvasText}.summary-icon,.summary-title,.summary-reason,.finding{color:CanvasText}}\r\n/* 1.0.3: the first disclosure contains evidence directly; only meaningful\n   multi-pair / multi-URL collections add another level. */\n.warning-category+.warning-category{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}.category-title{font-size:13px;line-height:1.55;font-weight:650;margin:0 0 7px}.pair-group{padding:4px 0}.pair-group+ .pair-group{border-top:1px solid var(--line);margin-top:7px;padding-top:8px}.pair-group>summary{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;list-style:none;padding:6px 0}.pair-group>summary::before,.url-entry>summary::before{content:'+';font-weight:700;flex:none}.pair-group[open]>summary::before,.url-entry[open]>summary::before{content:'−'}.pair-count{margin:0}.url-entry{border-inline-start:2px solid var(--line);padding-inline-start:10px;margin:7px 0}.url-entry:only-child{border:0;padding-inline-start:0;margin:0}.url-summary{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;color:var(--text)!important}.url-summary bdi{overflow-wrap:anywhere;min-width:0;max-width:100%;font-family:ui-monospace,monospace;font-size:12px}.url-summary .note{margin:0}.occurrence+.occurrence{border-top:1px dashed var(--line);padding-top:5px;margin-top:9px}.occurrence-location{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.occurrence-location .note{margin:0}.locate-link{font-size:11px;padding:5px 9px}.proceed-link{display:inline-flex;align-items:center;text-decoration:none;border:1px solid var(--risk);border-radius:6px;padding:9px 13px;font-weight:600}.proceed-link:focus-visible{outline:3px solid var(--focus);outline-offset:3px}dialog .buttons{align-items:stretch}dialog .link-card{border:0}.body>.coverage-note:first-child{border-top:0;padding-top:0}\n@media(forced-colors:active){.proceed-link{color:LinkText;background:Canvas;border-color:LinkText}.pair-group,.url-entry,.occurrence{border-color:CanvasText}}\n";
+globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-scheme:light;--surface:#ffffff;--text:#0f172a;--muted:#475569;--line:#dce2e9;--soft:#f8fafc;--focus:#246b87;--warn:#92400e;--warn-bg:#fffbeb;--warn-line:#ead9aa;--risk:#a13a28;--risk-bg:#fff3ef;--risk-line:#efc7bc}\n*{box-sizing:border-box}button,summary{cursor:pointer}button{font:inherit;border:1px solid var(--line);border-radius:6px;padding:9px 13px;background:var(--surface);color:var(--text);font-weight:600}\nbutton:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}\n.wrap{font:13px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:6px;min-width:0}\n.wrap>summary{display:flex;gap:10px;align-items:flex-start;list-style:none;min-height:34px;padding:9px 11px}\nsummary::-webkit-details-marker{display:none}.brand-mark{display:block;width:24px;height:24px;flex:none}.summary-copy{display:grid;gap:4px;min-width:0;flex:1}.summary-heading{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.summary-title{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--soft);font-weight:650}.summary-reason{font-size:12px;overflow-wrap:anywhere;min-width:0}\n.wrap.CAUTION,.wrap.WARNING{border-color:var(--warn-line)}.wrap.HIGH_RISK{border-color:var(--risk-line)}.CAUTION .summary-title,.WARNING .summary-title{background:var(--warn-bg);color:var(--warn)}.HIGH_RISK .summary-title{background:var(--risk-bg);color:var(--risk)}\n.summary-evidence{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;min-width:0;font-size:13px;color:var(--text)}.evidence-fact{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:baseline;min-width:0;max-width:100%}.evidence-label{color:var(--muted);font-size:11px}.evidence-value{font-weight:650;white-space:normal;overflow-wrap:anywhere;min-width:0;max-width:100%;unicode-bidi:isolate}.summary-host{direction:ltr;unicode-bidi:isolate}.relation-separator{color:var(--muted)}.summary-actions{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:11px}.details-label:after{content:' +';font-weight:650}.wrap[open] .details-label:after{content:' −'}\n.wrap.quiet:not([open]){width:34px;margin-left:auto;background:var(--surface);color:var(--muted)}.quiet:not([open])>summary{padding:0;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px}.quiet:not([open]) .summary-copy{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}\n.body{padding:10px 12px;color:var(--text);background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 6px 6px;overflow-wrap:anywhere}\n.brand{font-weight:700;color:var(--text);font-size:13px}.note,.muted,.mono{font-size:12px;color:var(--muted)}.note{margin:10px 0 0}.badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;background:var(--soft);color:var(--text);font-size:11px;font-weight:650;max-width:100%;flex:none}.level-HIGH_RISK{background:var(--risk-bg);color:var(--risk)}.level-WARNING,.level-CAUTION{background:var(--warn-bg);color:var(--warn)}\n.link-card{padding:10px 0;border-bottom:1px solid var(--line)}.link-card:last-of-type{border-bottom:0}.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}.host{font-weight:650;overflow-wrap:anywhere;unicode-bidi:isolate;text-align:left;min-width:0}.mono{font-family:ui-monospace,monospace;overflow-wrap:anywhere}\n.facts{display:grid;grid-template-columns:minmax(90px,16%) minmax(0,1fr);gap:5px 12px;margin:10px 0}.fact-label{font-size:11px;color:var(--muted)}.fact-value{margin:0;font-size:12px;overflow-wrap:anywhere;white-space:pre-wrap;unicode-bidi:isolate}\n.finding-list{margin:5px 0;padding-inline-start:18px}.finding{margin:3px 0;color:var(--text)}.evidence{margin:6px 0 0}.evidence>summary,.header-details>summary{color:var(--muted);font-size:12px}.header-details{margin-top:10px}.coverage-note{border-top:1px solid var(--line);padding-top:9px}\ndialog{font:14px/1.6 system-ui,sans-serif;color:var(--text);border:1px solid var(--line);border-radius:10px;background:var(--surface);width:620px;max-width:calc(100vw - 32px);max-height:85vh;padding:22px;overflow:auto}dialog::backdrop{background:#14251f88}dialog h2{margin:0 0 12px;font-size:22px}dialog .buttons{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:20px}dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;text-align:left;background:var(--soft);padding:12px;border-radius:4px;font-size:12px}.danger{background:var(--risk);color:var(--surface);border-color:var(--risk)}\n@media(max-width:600px){.wrap>summary{gap:8px}.facts{grid-template-columns:1fr;gap:2px}.fact-value{margin-bottom:7px}.summary-heading{gap:4px 8px}}\n:host([data-theme=\"dark\"]){color-scheme:dark;--surface:#20242b;--text:#f1f5f9;--muted:#c0cad7;--line:#46505e;--soft:#2a303a;--focus:#8bc5e3;--warn:#ffd58a;--warn-bg:#3a3020;--warn-line:#746144;--risk:#ffc4b5;--risk-bg:#3d2d2a;--risk-line:#815b52}\n@media(forced-colors:active){.wrap,.body,button,dialog{border-color:CanvasText}.summary-icon,.summary-title,.summary-reason,.finding{color:CanvasText}}\n/* 1.0.3: the first disclosure contains evidence directly; only meaningful\n   multi-pair / multi-URL collections add another level. */\n.warning-category+.warning-category{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}.category-title{font-size:13px;line-height:1.55;font-weight:650;margin:0 0 7px}.pair-group{padding:4px 0}.pair-group+ .pair-group{border-top:1px solid var(--line);margin-top:7px;padding-top:8px}.pair-group>summary{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;list-style:none;padding:6px 0}.pair-group>summary::before,.url-entry>summary::before{content:'+';font-weight:700;flex:none}.pair-group[open]>summary::before,.url-entry[open]>summary::before{content:'−'}.pair-count{margin:0}.url-entry{border-inline-start:2px solid var(--line);padding-inline-start:10px;margin:7px 0}.url-entry:only-child{border:0;padding-inline-start:0;margin:0}.url-summary{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;color:var(--text)!important}.url-summary bdi{overflow-wrap:anywhere;min-width:0;max-width:100%;font-family:ui-monospace,monospace;font-size:12px}.url-summary .note{margin:0}.occurrence+.occurrence{border-top:1px dashed var(--line);padding-top:5px;margin-top:9px}.occurrence-location{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.occurrence-location .note{margin:0}.locate-link{font-size:11px;padding:5px 9px}.proceed-link{display:inline-flex;align-items:center;text-decoration:none;border:1px solid var(--risk);border-radius:6px;padding:9px 13px;font-weight:600}.proceed-link:focus-visible{outline:3px solid var(--focus);outline-offset:3px}dialog .buttons{align-items:stretch}dialog .link-card{border:0}.body>.coverage-note:first-child{border-top:0;padding-top:0}\n@media(forced-colors:active){.proceed-link{color:LinkText;background:Canvas;border-color:LinkText}.pair-group,.url-entry,.occurrence{border-color:CanvasText}}\n\n/* 1.0.8: quiet, destination-first cards. Gmail supplies the font; no font fetch. */\n:host{font-family:inherit;--alert:#b3261e;--alert-bg:#fff1ef;--alert-line:#efc4bf}\n.wrap{font-family:inherit;font-size:13px;line-height:1.6;border-radius:12px;box-shadow:0 1px 2px #0f172a04}\n.wrap>summary{gap:12px;padding:14px 16px;min-height:56px}\n.brand-mark{width:26px;height:26px;margin-top:1px}\n.summary-copy{gap:6px}.summary-heading{gap:6px 10px}.summary-title{padding:2px 8px;border-radius:6px;font-size:11px;line-height:1.6;font-weight:650}.summary-reason{font-size:13px;line-height:1.55}\n.summary-actions{gap:8px 16px;font-size:11px}.details-label{margin-inline-start:auto;white-space:nowrap}\n.wrap.CAUTION{border-color:var(--warn-line)}.wrap.WARNING{border-color:var(--alert-line)}.wrap.HIGH_RISK{border-color:var(--risk-line);border-inline-start:3px solid var(--risk)}\n.WARNING .summary-title{color:var(--alert);background:var(--alert-bg)}\n.body{padding:16px;border-radius:0 0 12px 12px;border-top-color:var(--line)}\n.warning-group+.warning-group{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}\n.warning-group .pair-group{margin:0;padding:0;border:0;min-width:0}.group-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}\n.warning-group .group-summary{padding:8px 0;gap:8px 10px;align-items:center}.group-summary .summary-evidence{flex:1;min-width:150px}\n.reason-count{font-size:11px;font-weight:600;line-height:1.5;color:var(--muted);background:var(--soft);border:1px solid var(--line);padding:2px 8px;border-radius:20px;white-space:nowrap}\n.reason-list{display:grid;gap:9px;list-style:none;padding:0;margin:0 0 16px}.group-heading+.group-content .reason-list,.group-summary+.group-content .reason-list{margin-top:12px}\n.reason-item{display:flex;align-items:baseline;gap:9px;font-size:13px;line-height:1.6;margin:0;min-width:0}.reason-copy{min-width:0;overflow-wrap:anywhere}.reason-dot{width:6px;height:6px;flex:none;border-radius:50%;background:var(--muted);align-self:flex-start;margin-top:8px}.reason-CAUTION .reason-dot{background:var(--warn)}.reason-WARNING .reason-dot{background:var(--alert)}.reason-HIGH_RISK .reason-dot{background:var(--risk)}\n.group-content>.facts{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:12px 0}\n.facts{gap:6px 14px}.fact-label{font-size:11px;line-height:1.7}.fact-value{font-size:12px;line-height:1.7}\n.warning-group .url-entry{border:0;padding:0;margin:0}.occurrence+.occurrence{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}.occurrence .facts{margin:8px 0 12px}.occurrence-location{gap:10px}.locate-link{border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;background:var(--surface)}\n.coverage-note{font-size:11px;line-height:1.7;margin-top:16px;padding-top:12px;color:var(--muted)}\n.level-WARNING{color:var(--alert);background:var(--alert-bg)}\ndialog{font-family:inherit;border-radius:16px;padding:24px}dialog .brand{font-size:12px;color:var(--muted);margin-bottom:10px}dialog h2{font-size:21px;line-height:1.4;font-weight:650}.proceed-link,dialog button{border-radius:8px}\n:host([data-theme=\"dark\"]){--alert:#ffb4ab;--alert-bg:#442a29;--alert-line:#88544f;--risk:#ffb4ab;--risk-bg:#512421;--risk-line:#bd6960}\n@media(max-width:600px){.wrap>summary{padding:12px;gap:10px}.body{padding:12px}.summary-reason{font-size:12px}.group-content>.facts{padding:10px}.details-label{margin-inline-start:0}.facts{gap:2px}.reason-item{font-size:12px}}\n@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}\n@media(forced-colors:active){.wrap,.body,.group-content>.facts,.reason-count{border-color:CanvasText}.reason-dot{background:CanvasText}.reason-count{color:CanvasText;background:Canvas}.group-summary .badge{border:1px solid CanvasText}}\n\n.group-destination{flex-basis:100%;min-width:0;overflow-wrap:anywhere;font-size:11px;font-weight:400;line-height:1.7;color:var(--muted);unicode-bidi:isolate;text-align:start}\n";
 (() => {
  'use strict';const M=globalThis.MCG;if(globalThis.__MCG_STARTED__)return;globalThis.__MCG_STARTED__=true;
  let settings={...M.defaults,enabled:false}, timer=0, accountKey=location.pathname, scanning=false, rescan=false;
@@ -1873,17 +2149,93 @@ globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-sch
  function textWithin(root,max=1000){const walker=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT,{acceptNode:n=>{
   if(n.nodeType===1){if(isOwn(n)||n.matches('script,style,textarea,input,select,[contenteditable="true"],.gmail_quote,blockquote'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_SKIP;}
   return NodeFilter.FILTER_ACCEPT;}});let s='',n,count=0;while((n=walker.nextNode())&&count++<M.LIMIT.nodes){s+=n.nodeValue+' ';if(s.length>max)break;}return s.slice(0,max);}
- function linkInput(a,body,index=0){const label=textWithin(a,500)||(a.getAttribute('aria-label')||'').slice(0,500);let block=a.parentElement;let chosen=a;
-  for(let i=0;block&&i<5&&body.contains(block);i++,block=block.parentElement){if(block.querySelectorAll('a[href]').length!==1)break;const t=textWithin(block,M.LIMIT.context+1);if(t.length>M.LIMIT.context)break;chosen=block;if(block===body)break;}
+ // Recover the target's sentence when a nearby paragraph has several links.
+ // DOM offsets, not text search, bind repeated labels to the correct occurrence.
+ // Paragraph breaks and other links remain boundaries; no whole-message scoring.
+ function nearbySentence(anchor,container){
+  const blockTags=new Set(['P','DIV','LI','TD','TH','H1','H2','H3','H4','BLOCKQUOTE','SECTION','ARTICLE','FOOTER','HEADER']);
+  const stack=[{node:container,exit:false}],ranges=new Map();let text='',nodes=0;
+  const separator=()=>{if(text&&!text.endsWith('\n'))text+='\n';};
+  while(stack.length){const {node,exit}=stack.pop();
+   if(exit){if(ranges.has(node))ranges.get(node).end=text.length;if(node!==container&&blockTags.has(node.tagName))separator();continue;}
+   if(++nodes>M.LIMIT.nodes)return null;
+   if(node.nodeType===3){text+=node.nodeValue+' ';if(text.length>M.LIMIT.context)return null;continue;}
+   if(node.nodeType!==1||isOwn(node)||node.matches('script,style,textarea,input,select,[contenteditable="true"],.gmail_quote,blockquote'))continue;
+   if(node.tagName==='BR'||node!==container&&blockTags.has(node.tagName))separator();
+   if(node.matches('a[href]'))ranges.set(node,{start:text.length,end:text.length});
+   stack.push({node,exit:true});for(let i=node.childNodes.length-1;i>=0;i--)stack.push({node:node.childNodes[i],exit:false});
+  }
+  const target=ranges.get(anchor);if(!target||target.end<=target.start)return null;
+  const boundaries=[0];for(const match of text.matchAll(/[.!?。！？;；]\s+|\n+/g)){const at=match.index+match[0].length;if(at<=target.start||at>=target.end)boundaries.push(at);}boundaries.push(text.length);
+  const start=Math.max(...boundaries.filter(x=>x<=target.start)),end=Math.min(...boundaries.filter(x=>x>=target.end));
+  const linked=[...ranges].filter(([,r])=>r.start<end&&r.end>start),context=text.slice(start,end).trim();
+  const web=linked.filter(([node])=>!!M.validHttp(node.href||node.getAttribute('href')||''));
+  const mailReferences=linked.every(([node])=>node===anchor||/^mailto:/i.test(node.getAttribute('href')||'')&&M.mailboxInfo(textWithin(node,500).trim()).address);
+  const oneWebAccount=web.length===1&&web[0][0]===anchor&&mailReferences&&!M.context(context).secretRequest;
+  return context?{context,binding:linked.length===1||oneWebAccount?'block':'ambiguous'}:null;
+ }
+ function layoutInstruction(anchor,wrapper,body){
+  const label=M.normalize(textWithin(anchor,500));let current=wrapper;
+  const inline=new Set(['SPAN','B','STRONG','EM','I','SMALL','FONT']);
+  for(let depth=0;current&&depth<3&&body.contains(current);depth++){
+   if(!['DIV','SPAN'].includes(current.tagName)||M.normalize(textWithin(current,M.LIMIT.context))!==label)return null;
+   const parent=current.parentElement;if(!parent||!body.contains(parent)||parent.querySelectorAll('a[href]').length!==1)return null;
+   let prefix='',valid=true;
+   for(const node of parent.childNodes){if(node===current)break;if(node.nodeType===3)prefix+=node.nodeValue+' ';else if(node.nodeType===1&&inline.has(node.tagName)&&!isOwn(node))prefix+=textWithin(node,M.LIMIT.context)+' ';else if(node.nodeType===1&&!isOwn(node)){valid=false;break;}}
+   prefix=prefix.split(/[.!?。！？]\s+|[\r\n]+/).at(-1).trim();
+   // Recover only direct adjacent instructional prose, not a previous paragraph,
+   // completed unrelated sentence, footer, or another destination's action.
+   if(valid&&prefix&&prefix.length+label.length<=M.LIMIT.context&&M.context(prefix).active&&!/[.!?。！？]$/.test(prefix))return {context:prefix+' '+textWithin(anchor,500),binding:'block'};
+   if(M.normalize(textWithin(parent,M.LIMIT.context))!==label)return null;current=parent;
+  }
+  return null;
+ }
+ function linkInput(a,body,index=0){const label=textWithin(a,500)||(a.getAttribute('aria-label')||'').slice(0,500);let block=a.parentElement,nearby=null;
+  // Stop at the nearest semantic text block, even when this is the only link
+  // in the message. An unrelated footer must never supply its account action.
+  const blockTags=new Set(['P','DIV','LI','TD','TH','H1','H2','H3','H4','SECTION','ARTICLE','FOOTER','HEADER']);
+  for(let i=0;block&&i<5&&body.contains(block);i++,block=block.parentElement){
+   const candidate=nearbySentence(a,block);if(candidate)nearby=candidate;
+   if(blockTags.has(block.tagName)||block===body){if(candidate&&M.normalize(candidate.context)===M.normalize(label))nearby=layoutInstruction(a,block,body)||candidate;break;}
+  }
   const quoted=!!a.closest('blockquote,.gmail_quote');
-  return {id:String(index),href:a.href||a.getAttribute('href')||'',label,context:textWithin(chosen,M.LIMIT.context),binding:chosen===a?'anchor':'block',quoted};
+  return {id:String(index),href:a.href||a.getAttribute('href')||'',label,context:nearby?.context||textWithin(a,M.LIMIT.context),binding:nearby?.binding||'anchor',quoted};
  }
- function senderFor(body){const root=body.closest('.adn,[data-message-id],[data-legacy-message-id]');if(!root)return '';for(const el of root.querySelectorAll('span[email]'))if(!body.contains(el))return (el.getAttribute('email')||'').slice(0,500);return '';}
- function extract(body,anchors=[]){const links=[];let partial=false;const walker=document.createTreeWalker(body,NodeFilter.SHOW_ELEMENT,{acceptNode:n=>{if(isOwn(n)||n.matches('script,style,textarea,[contenteditable="true"]'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});let node,count=0;
+ function senderElementFor(body){const root=body.closest('.adn,[data-message-id],[data-legacy-message-id]');if(!root)return null;for(const el of root.querySelectorAll('span[email]'))if(!body.contains(el)&&!isOwn(el))return el;return null;}
+ function senderFor(body){return (senderElementFor(body)?.getAttribute('email')||'').slice(0,500);}
+ function senderIdentity(body){const el=senderElementFor(body);return {sender:senderFor(body),senderName:el?textWithin(el,200).trim():''};}
+ function messageIdentityKey(body){const root=body.closest('.adn,[data-message-id],[data-legacy-message-id]');return JSON.stringify([root?.getAttribute('data-message-id')||'',root?.getAttribute('data-legacy-message-id')||'']);}
+ // Label spellings come from checked-in official desktop-help evidence.
+ // Format normalization applies only to labels, never sender/domain/URL values.
+ const normalizeDetailLabel=value=>typeof value==='string'?value.normalize('NFKC').replace(/[\u200e\u200f\u061c]/g,'').replace(/[\u064b-\u0652\u0670]/g,'').replace(/\s+/g,' ').trim().replace(/[:：]$/,'').trim().toLowerCase():'';
+ const detailLabelMap=new Map();
+ for(const row of Object.values(M.GMAIL_DETAIL_LABELS||{}))for(const key of ['mailedBy','signedBy'])for(const value of row[key]||[]){const label=normalizeDetailLabel(value);if(!label)continue;const previous=detailLabelMap.get(label);detailLabelMap.set(label,previous!==undefined&&previous!==key?null:key);}
+ function displayedSenderDetails(body,identity){
+  const unavailable={unavailable:true};const root=body.closest('.adn,[data-message-id],[data-legacy-message-id]');if(!root)return unavailable;
+  // Only Gmail-owned details within this exact message, never body/quotes or
+  // detached/global popups. Ambiguous ownership or duplicate rows is unavailable.
+  const bodies=[...root.querySelectorAll('.a3s')].filter(n=>!n.closest('[contenteditable="true"]')&&visible(n));if(bodies.length!==1||bodies[0]!==body)return unavailable;
+  const popups=[...root.querySelectorAll('div.ajA')].filter(p=>!body.contains(p)&&!isOwn(p)&&visible(p)&&p.closest('.adn,[data-message-id],[data-legacy-message-id]')===root);
+  if(!popups.length)return undefined;if(popups.length!==1)return unavailable;const tables=[...popups[0].querySelectorAll('table.ajC')];if(tables.length!==1)return unavailable;
+  const values={};let ambiguous=false;
+  for(const row of tables[0].querySelectorAll('tr.ajv')){
+   const th=[...row.children].filter(n=>n.matches('th.gG[scope="row"]')),td=[...row.children].filter(n=>n.matches('td.gL'));if(th.length!==1||td.length!==1)continue;
+   const labels=[...th[0].children].filter(n=>n.matches('span.gI')),fields=[...td[0].children].filter(n=>n.matches('span.gI'));if(labels.length!==1||fields.length!==1)continue;
+   const label=normalizeDetailLabel(labels[0].textContent),key=detailLabelMap.get(label);if(!key)continue;
+   const value=M.senderDomain(fields[0].textContent);if(!value||Object.hasOwn(values,key)){ambiguous=true;break;}values[key]=value;
+  }
+  const fromAddress=M.mailboxInfo(identity.sender).address;
+  return !ambiguous&&fromAddress&&Object.keys(values).length?{...values,fromAddress,source:'GMAIL_DETAILS'}:unavailable;
+ }
+ function extract(body,anchors=[],state=null){const links=[];let partial=false;const walker=document.createTreeWalker(body,NodeFilter.SHOW_ELEMENT,{acceptNode:n=>{if(isOwn(n)||n.matches('script,style,textarea,[contenteditable="true"]'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});let node,count=0;
   while((node=walker.nextNode())){if(++count>M.LIMIT.nodes){partial=true;break;}if(node.matches('a[href]')){if(links.length>=M.LIMIT.links){partial=true;break;}anchors.push(node);links.push(linkInput(node,body,links.length));}}
-  return {sender:senderFor(body),links,partial};
+  const identity=senderIdentity(body),root=body.closest('.adn,[data-message-id],[data-legacy-message-id]');
+  const key=JSON.stringify([identity,links,root?.getAttribute('data-message-id')||'',root?.getAttribute('data-legacy-message-id')||'']);
+  if(state&&(state.senderObservationKey!==key||state.senderObservationRoot!==root)){state.senderObservationKey=key;state.senderObservationRoot=root;state.senderObservations=null;}
+  const observed=displayedSenderDetails(body,identity);if(state&&observed)state.senderObservations=observed.unavailable?null:observed;
+  return {...identity,senderObservations:(observed&&!observed.unavailable?observed:null)||state?.senderObservations||undefined,links,partial};
  }
- function dispose(state){state.host?.remove();for(const marker of state.markers||[])marker.remove();state.markers=[];state.anchors=[];state.input=null;state.result=null;state.signature='';if(highlight?.state===state)clearHighlight();}
+ function dispose(state){state.senderMarker?.remove();state.senderMarker=null;state.senderObservations=null;state.senderObservationKey='';state.senderObservationRoot=null;state.host?.remove();for(const marker of state.markers||[])marker.remove();state.markers=[];state.anchors=[];state.input=null;state.result=null;state.signature='';if(highlight?.state===state)clearHighlight();}
  function clear(){clearHighlight();for(const s of states.values())dispose(s);states.clear();if(activeDialog)closeDialog(activeDialog.host,activeDialog.focus);}
  function mailTheme(body){let node=body.parentElement;for(let i=0;node&&i<16;i++,node=node.parentElement){const color=getComputedStyle(node).backgroundColor;if(!/^rgba?\(/.test(color))continue;const c=color.match(/[\d.]+/g)?.map(Number);if(c&&c.length>=3&&(c.length===3||c[3]>=.95))return (.2126*c[0]+.7152*c[1]+.0722*c[2])<128?'dark':'light';}return matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
  function render(body,state){const result=state.result,level=result.level;
@@ -1896,12 +2248,12 @@ globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-sch
   state.host.dataset.theme=mailTheme(body);
   const label=M.resultLabel(result),model=M.summaryModel(result),reason=model.reason;
   const style=M.el('style',css),wrap=M.el('details','',{class:'wrap '+level+(quiet?' quiet':''),dir:M.locale==='ar'?'rtl':'ltr',lang:M.locale.replace('_','-')});wrap.open=wasOpen;
-  const name='MailContext Guard · '+label+(reason?' · '+reason:'')+(model.evidence.facts.length?' · '+model.evidence.facts.map(f=>f.label+': '+f.value).join(model.evidence.relation?' → ':' · '):'')+(model.otherCount?' · '+M.t('otherFindings',{n:model.otherCount}):'')+' · '+M.t('details');
+  const name='Mail Guard · '+label+(reason?' · '+reason:'')+(model.evidence.facts.length?' · '+model.evidence.facts.map(f=>f.label+': '+f.value).join(model.evidence.relation?' → ':' · '):'')+(model.reasonCount?' · '+M.t('reasonCount',{n:model.reasonCount}):'')+' · '+M.t('details');
   const summary=M.el('summary','',{'aria-label':name,'aria-expanded':wasOpen,'aria-controls':'message-details',title:name});summary.append(M.brandMark());
   const copy=M.el('span','',{class:'summary-copy'}),heading=M.el('span','',{class:'summary-heading'});heading.append(M.el('strong',label,{class:'summary-title'}));if(reason)heading.append(M.el('span',reason,{class:'summary-reason'}));copy.append(heading);
   if(model.evidence.facts.length)copy.append(M.renderSummaryEvidence(model.evidence));
-  const more=M.el('span','',{class:'summary-actions'});if(model.groupCount>1||model.linkCount>1)more.append(M.el('span',M.t('groupLinkCount',{groups:model.groupCount,links:model.linkCount}),{class:'other-findings'}));more.append(M.el('span',M.t(wasOpen?'close':'details'),{class:'details-label'}));copy.append(more);summary.append(copy);wrap.append(summary);
-  const detail=M.el('div','',{class:'body',id:'message-details'});M.appendReasons(detail,result,{summaryVisible:true,locate:(position,link,button)=>locateLink(body,state,position,link,button)});wrap.append(detail);
+  const more=M.el('span','',{class:'summary-actions'});if(model.reasonCount)more.append(M.el('span',model.linkGroupCount?M.t('groupReasonCount',{groups:model.linkGroupCount,reasons:model.reasonCount}):M.t('reasonCount',{n:model.reasonCount}),{class:'other-findings'}));if(model.linkCount>model.linkGroupCount)more.append(M.el('span',M.t('occurrences',{n:model.linkCount}),{class:'other-findings'}));more.append(M.el('span',M.t(wasOpen?'close':'details'),{class:'details-label'}));copy.append(more);summary.append(copy);wrap.append(summary);
+  const detail=M.el('div','',{class:'body',id:'message-details'});M.appendReasons(detail,result,{summaryVisible:true,locateSender:()=>locateSender(body,state),locate:(position,link,button)=>locateLink(body,state,position,link,button)});wrap.append(detail);
   wrap.addEventListener('toggle',()=>{summary.setAttribute('aria-expanded',String(wrap.open));summary.querySelector('.details-label').textContent=M.t(wrap.open?'close':'details');});
   wrap.addEventListener('keydown',e=>{if(e.key==='Escape'&&wrap.open){wrap.open=false;summary.focus();e.stopPropagation();}});
   root.replaceChildren(style,wrap);for(const e of root.querySelectorAll('.evidence,.pair-group'))if(expanded.has(e._findingKey))e.open=true;
@@ -1913,8 +2265,8 @@ globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-sch
    const bodies=[...document.querySelectorAll('.a3s')].filter(b=>!b.closest('[contenteditable="true"]')&&visible(b)).slice(0,60);const keep=new Set(bodies);
    for(const [b,s]of states)if(!keep.has(b)){dispose(s);states.delete(b);}
    for(const body of bodies){if(!settings.enabled)break;let state=states.get(body);if(!state){state={revision:0,host:null,signature:''};states.set(body,state);}
-    const anchors=[],input=extract(body,anchors),signature=JSON.stringify(input);state.anchors=anchors;if(signature!==state.signature){state.revision++;state.signature=signature;state.input=input;state.result=M.analyzeMessage(input);render(body,state);installMarkers(body,state);}else if(!state.host?.isConnected||state.host.nextElementSibling!==body)render(body,state);
-    if(state.host)state.host.dataset.theme=mailTheme(body);if((state.markers||[]).some(m=>!m.isConnected))installMarkers(body,state);await new Promise(resolve=>setTimeout(resolve,0));
+    const anchors=[],input=extract(body,anchors,state),signature=JSON.stringify(input);state.anchors=anchors;if(signature!==state.signature){state.revision++;state.signature=signature;state.input=input;state.result=M.analyzeMessage(input);render(body,state);installMarkers(body,state);}else if(!state.host?.isConnected||state.host.nextElementSibling!==body)render(body,state);
+    if(state.host)state.host.dataset.theme=mailTheme(body);installSenderMarker(body,state);if((state.markers||[]).some(m=>!m.isConnected))installMarkers(body,state);await new Promise(resolve=>setTimeout(resolve,0));
    }
   }finally{scanning=false;if(rescan){rescan=false;schedule();}}
  }
@@ -1923,6 +2275,9 @@ globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-sch
  function locateLink(body,state,position,link,button){
   const anchor=state.anchors?.[position-1];
   if(!settings.enabled||!body.isConnected||!anchor?.isConnected||!body.contains(anchor)||anchor.href!==(link.info.raw||link.info.url)||states.get(body)!==state){if(button)button.textContent=M.t('linkChanged');schedule();return;}
+  highlightElement(anchor,state);
+ }
+ function highlightElement(anchor,state){
   clearHighlight();anchor.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});const tabAdded=!anchor.hasAttribute('tabindex');if(tabAdded)anchor.setAttribute('tabindex','-1');anchor.focus({preventScroll:true});
   // An extension-owned overlay never rewrites the mail anchor's styles or href.
   const overlay=document.createElement('div');owned.add(overlay);overlay.dataset.mailcontextHighlight='';const shadow=overlay.attachShadow({mode:'open'});shadow.append(M.el('style',':host{position:fixed;pointer-events:none;z-index:2147483646;box-sizing:border-box;border:3px dashed #92400e;outline:2px solid white;border-radius:3px;background:#fff4c233}'));document.documentElement.append(overlay);
@@ -1930,22 +2285,41 @@ globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-sch
   highlight={anchor,state,overlay,tabAdded,timer:setTimeout(clearHighlight,4500),place};place();
  }
  window.addEventListener('scroll',()=>highlight?.place(),true);window.addEventListener('resize',()=>highlight?.place());
+ function locateSender(body,state){
+  const sender=senderElementFor(body);
+  if(!settings.enabled||states.get(body)!==state||!body.isConnected||!sender?.isConnected||M.mailboxInfo(senderFor(body)).address!==state.result.senderEvidence?.address){schedule();return;}
+  highlightElement(sender,state);
+ }
+ function installSenderMarker(body,state){
+  const sender=senderElementFor(body),result=state.result;
+  const strong=result.links.some(link=>link.findings.some(f=>['W01','H01','H02','W03'].includes(f.id)));
+  const info=result.findings.some(f=>!!f.senderEvidence);
+  if(!sender||!strong&&(!info||!settings.showInfo)){state.senderMarker?.remove();state.senderMarker=null;return;}
+  const level=strong?result.level:'INFO',key=level+'|'+senderFor(body)+'|'+settings.language+'|'+mailTheme(body);
+  if(state.senderMarker?.isConnected&&state.senderMarker._senderKey===key&&state.senderElement===sender)return;
+  state.senderMarker?.remove();const marker=document.createElement('span');owned.add(marker);marker.dataset.mailcontextSenderMarker='';marker.dataset.theme=mailTheme(body);marker._senderKey=key;state.senderElement=sender;
+  marker.setAttribute('dir',M.locale==='ar'?'rtl':'ltr');marker.setAttribute('lang',M.locale.replace('_','-'));
+  const shadow=marker.attachShadow({mode:'open'});shadow.append(M.el('style',':host{display:inline-block;vertical-align:baseline;margin-inline-start:6px;font-family:inherit}button{font-family:inherit;font-size:11px;line-height:1.5;font-weight:600;border:1px solid #c4c7c5;border-radius:12px;padding:2px 8px;color:#444746;background:#f2f4f3;cursor:pointer}button.WARNING{color:#b3261e;background:#fff1ef;border-color:#efc4bf}button.HIGH_RISK{color:#9b211c;background:#fce8e6;border-color:#d58b84}button:focus-visible{outline:3px solid #246b87;outline-offset:3px}:host([data-theme=dark]) button{color:#e3e6e5;background:#303735;border-color:#67726d}:host([data-theme=dark]) button.WARNING,:host([data-theme=dark]) button.HIGH_RISK{color:#ffb4ab;background:#442a29;border-color:#aa6860}@media(forced-colors:active){button{color:ButtonText;background:ButtonFace;border-color:ButtonText}}'));
+  const button=M.el('button',M.t(strong?'senderLinkWarning':'senderInfo'),{type:'button',class:level,'aria-label':M.t('senderContext')+' · '+M.t(level)+' · '+M.t('senderClaimsNote'),title:M.t('senderClaimsNote')});
+  button.addEventListener('click',()=>{const wrap=state.shadow?.querySelector('.wrap');if(wrap){wrap.open=true;wrap.querySelector('summary')?.focus({preventScroll:true});state.host.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});}});
+  shadow.append(button);sender.after(marker);state.senderMarker=marker;
+ }
  function installMarkers(body,state){
   for(const marker of state.markers||[])marker.remove();state.markers=[];
   state.result.links.forEach((link,index)=>{if(!M.warnsInMail(link))return;const anchor=state.anchors[index];if(!anchor?.isConnected)return;
    const marker=document.createElement('span');owned.add(marker);marker.dataset.mailcontextMarker='';marker.setAttribute('lang',M.locale.replace('_','-'));marker.setAttribute('dir',M.locale==='ar'?'rtl':'ltr');const shadow=marker.attachShadow({mode:'open'});
-   shadow.append(M.el('style',':host{display:inline-block;max-width:100%;vertical-align:baseline;margin:2px 3px;font:11px/1.5 system-ui,sans-serif;color:#713f12}.marker-destination{display:inline;background:#fffbeb;color:#713f12;border-radius:3px;padding:2px 4px;margin-inline-start:3px;overflow-wrap:anywhere}.marker-destination-label{font-weight:500}.marker-url{overflow-wrap:anywhere;unicode-bidi:isolate;user-select:text}.marker-full-url{display:block;max-width:100%;overflow-wrap:anywhere;white-space:normal;unicode-bidi:isolate;background:#fffbeb;padding:4px;user-select:text}.marker-full-url[hidden]{display:none}.destination-toggle{margin-inline-start:4px}button{font:600 11px/1.35 system-ui,sans-serif;color:#713f12;background:#fffbeb;border:1px solid #b38b44;border-radius:3px;padding:1px 4px;cursor:pointer}button:focus-visible{outline:3px solid #246b87;outline-offset:2px}@media(forced-colors:active){button{color:ButtonText;background:ButtonFace;border-color:ButtonText}}'));
+   shadow.append(M.el('style',':host{display:inline-block;max-width:100%;vertical-align:baseline;margin:2px 3px;font:inherit;font-size:11px;line-height:1.5;color:#713f12}.marker-destination{display:inline;background:#fffbeb;color:#713f12;border-radius:3px;padding:2px 4px;margin-inline-start:3px;overflow-wrap:anywhere}.marker-destination-label{font-weight:500}.marker-url{overflow-wrap:anywhere;unicode-bidi:isolate;user-select:text}.marker-full-url{display:block;max-width:100%;overflow-wrap:anywhere;white-space:normal;unicode-bidi:isolate;background:#fffbeb;padding:4px;user-select:text}.marker-full-url[hidden]{display:none}.destination-toggle{margin-inline-start:4px}button{font-family:inherit;font-size:11px;font-weight:600;line-height:1.35;color:#713f12;background:#fffbeb;border:1px solid #b38b44;border-radius:3px;padding:1px 4px;cursor:pointer}button:focus-visible{outline:3px solid #246b87;outline-offset:2px}@media(forced-colors:active){button{color:ButtonText;background:ButtonFace;border-color:ButtonText}}'));
    const button=M.el('button','⚠ '+M.t('warningMarker'),{type:'button','aria-label':M.t('locateWarning')+' · '+M.t(link.level),title:M.t('locateWarning')+' · '+M.t(link.findings[0]?.reason||'coverage')+' · '+M.t('coverage')});
    button.addEventListener('click',()=>{const wrap=state.shadow?.querySelector('.wrap');if(wrap)wrap.open=true;locateLink(body,state,index+1,link,button);});shadow.append(button,M.renderMarkerDestination(anchor.href));anchor.after(marker);state.markers.push(marker);
   });
  }
  function closeDialog(host,focus){host.remove();if(activeDialog?.host===host){clearTimeout(activeDialog.timer);activeDialog=null;}if(focus?.isConnected)focus.focus({preventScroll:true});}
  function confirmLink(a,body,result,event){event.preventDefault();event.stopImmediatePropagation();if(activeDialog)closeDialog(activeDialog.host,null);
-  const original=a.href,originalTarget=a.target,originalRoute=routeKey(),snapshot=JSON.stringify(linkInput(a,body)),sender=senderFor(body);const focus=a;const host=document.createElement('div');owned.add(host);document.documentElement.append(host);
-  const valid=()=>activeDialog?.host===host&&host.isConnected&&settings.enabled&&a.isConnected&&body.isConnected&&visible(body)&&body.contains(a)&&a.closest('.a3s')===body&&a.href===original&&a.target===originalTarget&&routeKey()===originalRoute&&JSON.stringify(linkInput(a,body))===snapshot&&senderFor(body)===sender;
+  const original=a.href,originalTarget=a.target,originalRoute=routeKey(),snapshot=JSON.stringify(linkInput(a,body)),senderSnapshot=JSON.stringify(senderIdentity(body)),messageKey=messageIdentityKey(body),messageRoot=body.closest('.adn,[data-message-id],[data-legacy-message-id]');const focus=a;const host=document.createElement('div');owned.add(host);document.documentElement.append(host);
+  const valid=()=>activeDialog?.host===host&&host.isConnected&&settings.enabled&&a.isConnected&&body.isConnected&&visible(body)&&body.contains(a)&&a.closest('.a3s')===body&&a.href===original&&a.target===originalTarget&&routeKey()===originalRoute&&JSON.stringify(linkInput(a,body))===snapshot&&JSON.stringify(senderIdentity(body))===senderSnapshot&&messageIdentityKey(body)===messageKey&&body.closest('.adn,[data-message-id],[data-legacy-message-id]')===messageRoot;
   activeDialog={host,focus,valid};const watch=()=>{if(activeDialog?.host!==host)return;if(!valid()){closeDialog(host,focus);return;}activeDialog.timer=setTimeout(watch,200);};activeDialog.timer=setTimeout(watch,200);const newContext=event.button===1||event.ctrlKey||event.metaKey||event.shiftKey||a.target==='_blank';
   const shadow=host.attachShadow({mode:'open'});shadow.append(M.el('style',css));const dialog=M.el('dialog','',{dir:M.locale==='ar'?'rtl':'ltr',lang:M.locale.replace('_','-'),'aria-label':M.t('confirm')});
-  host.dataset.theme=mailTheme(body);dialog.append(M.el('p','MailContext Guard',{class:'brand'}),M.el('h2',M.t('confirm')),M.status(result.level),M.renderLinkCard(result));
+  host.dataset.theme=mailTheme(body);dialog.append(M.el('p','Mail Guard',{class:'brand'}),M.el('h2',M.t('confirm')),M.status(result.level),M.renderLinkCard(result));
   dialog.append(M.el('p',M.t('coverage'),{class:'note'}));const buttons=M.el('div','',{class:'buttons'});
   const cancel=M.button('cancel',()=>closeDialog(host,focus));buttons.append(cancel);
   const copy=M.button('copy',async()=>{try{await navigator.clipboard.writeText(original);copy.textContent=M.t('copied');}catch{copy.textContent=M.t('copyUnavailable');}});buttons.append(copy);
@@ -1960,11 +2334,11 @@ globalThis.MCG.mailCss = ":host{all:initial;display:block;margin:6px 0;color-sch
  }
  function clickGuard(event){if(!settings.enabled||!event.isTrusted)return;if(event.type==='auxclick'&&event.button!==1)return;if(event.type==='click'&&event.button!==0)return;
   const a=event.composedPath().find(n=>n instanceof HTMLAnchorElement);if(!a)return;const body=a.closest('.a3s');if(!body||!visible(body)||body.closest('[contenteditable="true"]'))return;
-  const input=linkInput(a,body);const result=M.analyzeLink(input,{sender:senderFor(body)});if(M.warnsInMail(result))confirmLink(a,body,result,event);
+  const input=linkInput(a,body);const result=M.analyzeLink(input,senderIdentity(body));if(M.warnsInMail(result))confirmLink(a,body,result,event);
  }
  document.addEventListener('click',clickGuard,true);document.addEventListener('auxclick',clickGuard,true);
  const observer=new MutationObserver(records=>{if(activeDialog&&!activeDialog.valid())closeDialog(activeDialog.host,activeDialog.focus);if(highlight&&!highlight.anchor.isConnected)clearHighlight();if(!settings.enabled)return;if([...states.values()].some(s=>s.host&&!s.host.isConnected||(s.markers||[]).some(m=>!m.isConnected))){schedule();return;}if(records.every(r=>isOwn(r.target)||r.type==='childList'&&[...r.addedNodes,...r.removedNodes].length>0&&[...r.addedNodes,...r.removedNodes].every(isOwn)))return;schedule();});
- observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['href','class','style','hidden','aria-expanded','email','target']});
+ observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['href','class','style','hidden','aria-expanded','email','target','data-message-id','data-legacy-message-id']});
  function apply(s){try{settings=M.validateSettings(s);}catch{return;}M.setLocale(settings.language);clear();if(settings.enabled)schedule();}
  chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
   if(sender.id!==chrome.runtime.id)return false;

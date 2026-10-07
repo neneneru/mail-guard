@@ -1,9 +1,9 @@
-/* MailContext Guard 1.0.7 — bundled locally; no remote dependencies. */
-/* MailContext Guard. Pure, bounded local analysis; no network or persistent state. */
+/* Mail Guard 1.1.2 — bundled locally; no remote dependencies. */
+/* Mail Guard. Pure, bounded local analysis; no network or persistent state. */
 (() => {
   'use strict';
   const M = globalThis.MCG = globalThis.MCG || Object.create(null);
-  M.VERSION = '1.0.7';
+  M.VERSION = '1.1.2';
   M.LIMIT = Object.freeze({url:16384, links:500, context:1000, text:262144, nodes:20000, header:262144, fields:2048, field:32768, raw:5000000, mimeParts:128, depth:10});
   M.LEVELS = ['NO_FINDINGS','INFO','CAUTION','WARNING','HIGH_RISK'];
   M.maxLevel = (...x) => M.LEVELS[Math.max(0,...x.map(v=>M.LEVELS.indexOf(v)))];
@@ -422,6 +422,67 @@ globalThis.MCG.TERMS = {
  M.brandHost=(b,h)=>!!b&&b.domains.some(d=>M.boundary(h,d));
 })();
 
+/* Sender metadata is an unverified claim, never authentication or a safe verdict. */
+(() => {
+ 'use strict';const M=globalThis.MCG;
+ M.senderDomain=value=>{
+  if(typeof value!=='string'||value.length>253)return '';
+  const raw=value.trim().toLowerCase().replace(/\.$/,'');
+  if(!raw||/[\s/@:#?\[\]\\<>]/.test(raw))return '';
+  let host;try{host=new URL('https://'+raw).hostname.toLowerCase();}catch{return '';}
+  if(!host.includes('.')||/^\d+(?:\.\d+){3}$/.test(host)||!host.split('.').every(x=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(x)))return '';
+  return host;
+ };
+ M.mailboxInfo=value=>{
+  const empty={address:'',domain:'',displayName:''};if(typeof value!=='string'||value.length>1000||/[\r\n]/.test(value))return empty;
+  let text=value.trim(),name='';const angle=/^([^<>]*)<([^<>]+)>$/.exec(text);
+  if(angle){name=angle[1].trim().replace(/^"([^"]*)"$/,'$1');text=angle[2].trim();}else if(/[<>]/.test(text))return empty;
+  const match=/^([a-z0-9.!#$%&'*+\/=?^_`{|}~-]+)@([^@]+)$/i.exec(text);
+  if(!match||match[1].startsWith('.')||match[1].endsWith('.')||match[1].includes('..'))return empty;
+  const domain=M.senderDomain(match[2]);if(!domain)return empty;
+  return {address:match[1]+'@'+domain,domain,displayName:M.clip(name,200)};
+ };
+ const domainBrand=domain=>M.BRANDS.find(b=>b.domains.some(d=>M.boundary(domain,d)))||null;
+ const publicMailboxes=new Set(['outlook.com','live.com','icloud.com']);
+ M.senderBrand=sender=>{const domain=M.mailboxInfo(sender).domain;return domain?M.BRANDS.find(b=>b.domains.some(d=>!publicMailboxes.has(d)&&M.boundary(domain,d)))||null:null;};
+ M.compareSenderDomains=(a,b)=>{
+  a=M.senderDomain(a);b=M.senderDomain(b);if(!a||!b)return 'UNKNOWN';if(a===b)return 'SAME';
+  const aa=M.domain(a).registrable,bb=M.domain(b).registrable;if(aa&&bb&&aa===bb)return 'RELATED';
+  const ba=domainBrand(a),br=domainBrand(b);return ba&&br&&ba.id===br.id?'RELATED':'DIFFERENT';
+ };
+ M.senderMetadata=(address,displayName='')=>{
+  const box=M.mailboxInfo(address),name=M.clip(displayName||box.displayName,200).trim();
+  const nameBrand=M.BRANDS.find(b=>b.words.some(w=>M.normalize(w)===M.normalize(name)))||null;
+  const displayedAddress=M.mailboxInfo(name),claimedDomain=displayedAddress.domain;
+  // Shared mailbox-provider ownership does not identify the company as sender.
+  // Outlook/Live/iCloud users can choose ordinary personal mailbox addresses.
+  const nameDomainMatches=nameBrand?.domains.some(d=>!publicMailboxes.has(d)&&M.boundary(box.domain,d));
+  const actualSite=box.domain?M.domain(box.domain).registrable:null,claimedSite=claimedDomain?M.domain(claimedDomain).registrable:null;
+  const displayedDomainMatches=box.domain===claimedDomain||!!actualSite&&actualSite===claimedSite;
+  const nameMismatch=!!box.domain&&((!!nameBrand&&!nameDomainMatches)||(!!claimedDomain&&!displayedDomainMatches));
+  return {address:box.address,domain:box.domain,displayName:name,claimedBrand:nameBrand?.id||'',claimedDomain,nameMismatch,provenance:'UNVERIFIED_SENDER_CLAIM'};
+ };
+ M.senderHeaderEvidence=(fields,sender)=>{
+  const all=n=>fields.filter(f=>f.name===n),from=all('from'),returns=all('return-path');
+  const goodFrom=from.length===1&&!from[0].invalid,fromDomain=goodFrom?M.mailboxInfo(from[0].value).domain:'';
+  const deliveryDomain=returns.length===1&&!returns[0].invalid?M.mailboxInfo(returns[0].value).domain:'';
+  const signatures=all('dkim-signature');let malformed=false;const signatureDomains=[];
+  for(const field of signatures.slice(0,50)){
+   const ds=M.splitHeader(field.value).filter(x=>/^d\s*=/i.test(x));
+   const domain=ds.length===1&&!field.invalid?M.senderDomain(ds[0].slice(ds[0].indexOf('=')+1)):'';
+   if(!domain)malformed=true;else if(!signatureDomains.includes(domain))signatureDomains.push(domain);
+  }
+  const signerRelation=!fromDomain||!signatureDomains.length||malformed||signatures.length>50?'UNKNOWN':signatureDomains.some(d=>M.compareSenderDomains(fromDomain,d)==='SAME')?'SAME':signatureDomains.some(d=>M.compareSenderDomains(fromDomain,d)==='RELATED')?'RELATED':'DIFFERENT';
+  return {...M.senderMetadata(goodFrom?sender:''),fromDomain,deliveryDomain,signatureDomains,deliveryRelation:M.compareSenderDomains(fromDomain,deliveryDomain),signerRelation,provenance:'UNVERIFIED_HEADER_CLAIM'};
+ };
+ // Gmail's own displayed details are useful claims, not verified SPF/DKIM.
+ M.senderDisplayEvidence=(metadata,observations)=>{
+  if(!metadata?.address||!metadata.domain||!observations||observations.source!=='GMAIL_DETAILS'||observations.fromAddress!==metadata.address)return metadata;
+  const deliveryDomain=M.senderDomain(observations.mailedBy||''),signed=M.senderDomain(observations.signedBy||''),signatureDomains=signed?[signed]:[];
+  return {...metadata,fromDomain:metadata.domain,deliveryDomain,signatureDomains,deliveryRelation:M.compareSenderDomains(metadata.domain,deliveryDomain),signerRelation:signed?M.compareSenderDomains(metadata.domain,signed):'UNKNOWN',provenance:'GMAIL_DISPLAY_CLAIM'};
+ };
+})();
+
 (() => {
  'use strict';const M=globalThis.MCG;let cache;
  const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -510,7 +571,7 @@ globalThis.MCG.TERMS = {
     duplicateIdentity:all('from').length>1||all('reply-to').length>1,
     indirection:fields.some(f=>/^(x-forwarded-|x-sieve-redirected-|resent-|list-id)/.test(f.name))||/^<?srs[01][=+-]/i.test(first('return-path')),
     replyMismatch:reply.length>0&&from.length>0&&reply.some(x=>!from.includes(x)),
-    sender:first('from'),replyTo:first('reply-to')};
+    sender:first('from'),replyTo:first('reply-to'),senderEvidence:M.senderHeaderEvidence(fields,first('from'))};
  };
 })();
 
@@ -519,7 +580,8 @@ globalThis.MCG.TERMS = {
  M.analyzeLink=(input,message={})=>{
   const info=M.inspectUrl(input.href,input.label);const context=M.context(input.context||input.label||'');const labelContext=M.context(input.label||'');
   const binding=input.binding||'anchor';const bound=binding!=='ambiguous';
-  const brand=M.BRANDS.find(b=>labelContext.brandIds.includes(b.id))||M.BRANDS.find(b=>context.brandIds.includes(b.id))||M.senderBrand(message.sender);
+  const senderEvidence=M.senderMetadata(message.sender,message.senderName||'');
+  const brand=M.BRANDS.find(b=>labelContext.brandIds.includes(b.id))||M.BRANDS.find(b=>context.brandIds.includes(b.id))||M.senderBrand(message.sender)||M.BRANDS.find(b=>b.id===senderEvidence.claimedBrand);
   const active=!input.quoted&&(bound?context.active:labelContext.active);const secret=!input.quoted&&(bound?context.secretRequest:labelContext.secretRequest);
   const findings=[];const add=(id,level,reason)=>{if(!findings.some(x=>x.id===id))findings.push({id,level,reason,confidence:['HIGH_RISK','WARNING'].includes(level)?'high':'medium'});};
   const destinations=[{host:info.host,role:info.role,url:info.url},...info.candidates];
@@ -542,15 +604,19 @@ globalThis.MCG.TERMS = {
   if(!bound&&!input.quoted&&context.active&&third&&!labelContext.active)add('C01','CAUTION','reasonAmbiguous');
   const level=M.maxLevel(...findings.map(f=>f.level));
   const intent=secret?'secret':active?'account':context.share?'shared':'generic';
-  return {id:input.id||'',info,findings,level,intent,brand:brand?.name||'',occurrence:{context:M.clip(input.context||input.label||'',M.LIMIT.context),binding,quoted:!!input.quoted},action:info.unsupported?'BLOCK_UNSUPPORTED':M.LEVELS.indexOf(level)>=3?'CONFIRM':'ALLOW',coverage:info.partial?'PARTIAL':'READY'};
+  return {id:input.id||'',info,findings,level,intent,brand:brand?.name||'',senderEvidence,occurrence:{context:M.clip(input.context||input.label||'',M.LIMIT.context),binding,quoted:!!input.quoted},action:info.unsupported?'BLOCK_UNSUPPORTED':M.LEVELS.indexOf(level)>=3?'CONFIRM':'ALLOW',coverage:info.partial?'PARTIAL':'READY'};
  };
  M.analyzeMessage=input=>{
   const links=(input.links||[]).slice(0,M.LIMIT.links).map(x=>M.analyzeLink(x,input));
-  const findings=[];let header=null;
-  if(input.headers){header=M.parseHeaders(input.headers);if(header.indirection)addHeader('I01','INFO','reasonForward');if(header.replyMismatch)addHeader('I03','INFO','reasonReply');}
+  const findings=[];let header=null;let senderEvidence=M.senderDisplayEvidence(M.senderMetadata(input.sender,input.senderName||''),input.senderObservations);
+  if(input.headers){header=M.parseHeaders(input.headers);senderEvidence=header.senderEvidence;if(header.indirection)addHeader('I01','INFO','reasonForward');if(header.replyMismatch)addHeader('I03','INFO','reasonReply');}
+  if(senderEvidence.nameMismatch)addHeader('I05','INFO','reasonSenderName');
+  if(senderEvidence.deliveryRelation==='DIFFERENT')addHeader('I06','INFO','reasonDeliveryDomain');
+  if(senderEvidence.signerRelation==='DIFFERENT')addHeader('I07','INFO','reasonSignerDomain');
+  for(const f of findings)if(['I05','I06','I07'].includes(f.id))f.senderEvidence=senderEvidence;
   function addHeader(id,level,reason){findings.push({id,level,reason,confidence:'low'});}
   const partial=!!input.partial||(input.links||[]).length>M.LIMIT.links||links.some(x=>x.coverage==='PARTIAL')||header?.partial;
-  return {version:M.VERSION,level:M.maxLevel(...links.map(x=>x.level),...findings.map(x=>x.level)),links,findings,header,
+  return {version:M.VERSION,level:M.maxLevel(...links.map(x=>x.level),...findings.map(x=>x.level)),links,findings,header,senderEvidence,
    coverage:{renderedBody:input.noBody?'NOT_INSPECTED':partial?'PARTIAL':'INSPECTED',urls:partial?'PARTIAL':'INSPECTED',headers:header?'UNVERIFIED_CLAIMS':'NOT_INSPECTED',qr:'NOT_INSPECTED',remoteDestination:'NOT_INSPECTED'},state:input.noBody&&!links.length?'UNAVAILABLE':partial?'PARTIAL':'READY'};
  };
 })();

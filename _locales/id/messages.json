@@ -39,7 +39,7 @@
     "message": "Pemeriksaan email lokal"
   },
   "scanHelp": {
-    "message": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis MailContext Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB)."
+    "message": "Tempel header atau email lengkap, atau pilih file .eml atau .txt, untuk menganalisisnya dengan aturan yang sama seperti pemeriksaan otomatis Mail Guard di Gmail. Konten hanya diproses di perangkat Anda, tanpa dikirim ke luar atau disimpan (hingga 5 MB)."
   },
   "choose": {
     "message": "Pilih .eml atau .txt"
@@ -177,7 +177,7 @@
     "message": "Domain alamat balasan dan pengirim berbeda. Perbedaan ini saja tidak menunjukkan bahaya."
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "Hanya sebagian isi yang diperiksa karena batas ukuran, format, atau penguraian."
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "File yang dipilih: {name}"
+  },
+  "reasonCount": {
+    "message": "Alasan: {n}"
+  },
+  "groupReasonCount": {
+    "message": "Tautan: {groups} · alasan: {reasons}"
+  },
+  "reasonSenderName": {
+    "message": "Nama atau alamat pengirim yang ditampilkan tidak sesuai dengan domain alamat pengirim. Hal ini saja tidak membuktikan pemalsuan identitas."
+  },
+  "reasonDeliveryDomain": {
+    "message": "Domain pengiriman atau penerusan berbeda dari domain pengirim. Penerusan yang sah dapat menjelaskan perbedaan ini."
+  },
+  "reasonSignerDomain": {
+    "message": "Domain tanda tangan yang tercantum berbeda dari domain pengirim. Hal ini saja tidak membuktikan pemalsuan identitas."
+  },
+  "senderAddress": {
+    "message": "Alamat pengirim"
+  },
+  "senderName": {
+    "message": "Nama pengirim yang ditampilkan"
+  },
+  "senderDomain": {
+    "message": "Domain pengirim"
+  },
+  "deliveryDomain": {
+    "message": "Domain pengiriman / penerusan"
+  },
+  "signerDomain": {
+    "message": "Domain tanda tangan yang tercantum"
+  },
+  "senderClaimsNote": {
+    "message": "Detail pengirim dan autentikasi merupakan informasi yang tercantum, tanpa verifikasi independen. Alamat yang dikenal tidak membuktikan keamanan tautan."
+  },
+  "senderLinkWarning": {
+    "message": "Periksa tautan"
+  },
+  "senderInfo": {
+    "message": "Info pengirim"
+  },
+  "locateSender": {
+    "message": "Ke pengirim"
+  },
+  "senderContext": {
+    "message": "Konteks pengirim dan tautan"
+  },
+  "privacySenderChecks": {
+    "message": "Juga membandingkan nama dan alamat pengirim yang ditampilkan dengan domain pengiriman dan tanda tangan dari detail Gmail yang Anda buka, secara lokal di perangkat ini."
   }
 }

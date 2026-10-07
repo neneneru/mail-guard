@@ -1,8 +1,6 @@
 ## Mozilla Public Suffix List
 
-The extension embeds a derived snapshot in `content.js` and `scan-worker.js`
-as `MCG.PSL`. The notice below describes its upstream OpenJDK distribution;
-the separate OpenJDK data file is not needed by this extension.
+The extension embeds the derived snapshot as MCG.PSL in content.js and scan-worker.js. The source bundle retains src/data/psl.json and src/data/public_suffix_list.dat; the redundant data file is not needed in the upload runtime.
 
 ### Public Suffix Notice
 ```
@@ -405,8 +403,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 ## HTML named character reference data
 
-The HTML entity data embedded in `content.js` and `scan-worker.js` is derived
-from Python 3.13 standard-library `html.entities.html5`.
+`src/data/entities.json` is derived from Python 3.13 standard-library `html.entities.html5`.
 The full distribution copyright and license notice is reproduced in `PYTHON-LICENSE.txt`.
 This data is used only by the local static HTML tokenizer.
 

@@ -177,7 +177,7 @@
     "message": "返信先と差出人のドメインが異なります。この違いだけで危険とは判断できません。"
   },
   "name": {
-    "message": "MailContext Guard"
+    "message": "Mail Guard"
   },
   "partial": {
     "message": "一部のみ確認しました。サイズ・形式・解析上限などにより、未確認の内容が残っています。"
@@ -313,5 +313,53 @@
   },
   "fileSelected": {
     "message": "選択したファイル：{name}"
+  },
+  "reasonCount": {
+    "message": "注意点 {n} 件"
+  },
+  "groupReasonCount": {
+    "message": "リンク {groups} 件・注意点 {reasons} 件"
+  },
+  "reasonSenderName": {
+    "message": "表示された送信者名やアドレスが、送信者アドレスのドメインと一致しません。この違いだけでなりすましとは判断できません。"
+  },
+  "reasonDeliveryDomain": {
+    "message": "送信経路や転送元のドメインが、送信者のドメインと異なります。正規の転送でも起こる場合があります。"
+  },
+  "reasonSignerDomain": {
+    "message": "表示上の署名ドメインが、送信者のドメインと異なります。この違いだけでなりすましとは判断できません。"
+  },
+  "senderAddress": {
+    "message": "送信者アドレス"
+  },
+  "senderName": {
+    "message": "表示された送信者名"
+  },
+  "senderDomain": {
+    "message": "送信者ドメイン"
+  },
+  "deliveryDomain": {
+    "message": "送信経路／転送ドメイン"
+  },
+  "signerDomain": {
+    "message": "表示上の署名ドメイン"
+  },
+  "senderClaimsNote": {
+    "message": "送信者や認証の詳細は記載された情報であり、独自に検証したものではありません。見慣れたアドレスでも、リンクの安全性は確認できません。"
+  },
+  "senderLinkWarning": {
+    "message": "リンクを確認"
+  },
+  "senderInfo": {
+    "message": "送信者情報"
+  },
+  "locateSender": {
+    "message": "送信者の位置へ"
+  },
+  "senderContext": {
+    "message": "送信者とリンクの関連情報"
+  },
+  "privacySenderChecks": {
+    "message": "Gmail画面の送信者名・アドレスと、利用者が開いた詳細欄の送信元・署名元ドメインも、この端末内で比較します。"
   }
 }
